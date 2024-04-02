@@ -1,6 +1,6 @@
 # 15-112 - project2
 
-Parallel Bandpass Drum Dynamics Processor
+Parallel Bandpass Drum Dynamics and Harmonics Processor
 
 Inspired by this video: https://youtu.be/4hGBYs10ZAU?si=jQk2Dl15u7sJtUK1
 
