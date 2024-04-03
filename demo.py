@@ -4,9 +4,11 @@ from pedalboard import (LadderFilter, Invert, NoiseGate, Compressor, Clipping,
                         Distortion, Reverb, Convolution, Gain, Mix, Chain,
                         Pedalboard)
 
+# THIS FILE IS DEPRECATED
 
 
-# CHANGE THESE FOR YOUR SYSTEM [TEMPORARY]
+
+# CHANGE THESE FOR YOUR SYSTEM
 ########################################
 inputAudio = 'MacBook Pro Microphone'
 outputAudio = 'External Headphones'

@@ -8,4 +8,4 @@ TL:DW is that this is a technique to make drums sound awesome through dynamics a
 
 Uses Spotify's Pedalboard API: https://spotify.github.io/pedalboard/index.html
 
-Currently just a demo that tests for null (and succeeds!)
+Currently, main.py simply opens an audio stream after asking the user for input and output devices.

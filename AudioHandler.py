@@ -4,6 +4,7 @@ from pedalboard import (LadderFilter, Invert, NoiseGate, Compressor, Clipping,
                         Distortion, Reverb, Convolution, Gain, Mix, Chain,
                         Pedalboard)
 
+
 class AudioHandler:
 
     def __init__(self, inputAudio, outputAudio, 
@@ -17,7 +18,6 @@ class AudioHandler:
                             sample_rate=sampleRate,
                             plugins=defaultPlugins,
                             allow_feedback=True)
-        print(self.stream.plugins)
         self.audioThread = Thread(target=self.stream.run, daemon=True)
         self.audioThread.start()
         self.effectOrder = (LadderFilter, Invert, NoiseGate, Compressor, 
@@ -33,7 +33,7 @@ class AudioHandler:
         self.chainTypes = [ ]
         for plugin in self.stream.plugins[0][0]:
             self.chainTypes.append(type(plugin))
-    
+
     def getInsertionIndex(self, plugin):
         # plugin is a specific plugin object, but this function just needs type
         plugin = type(plugin)
