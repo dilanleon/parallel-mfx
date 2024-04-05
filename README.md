@@ -7,9 +7,9 @@ Inspired by this video: https://youtu.be/4hGBYs10ZAU?si=jQk2Dl15u7sJtUK1
 TL:DW is that this is a technique to make drums sound awesome through dynamics and harmonics processing on a parallel bandpass filter applied to the fundemental frequency.
 
 Uses Spotify's Pedalboard API: https://spotify.github.io/pedalboard/index.html
-and impulse response(s) from Chris Warren's EchoThief: http://www.echothief.com/
 
-    - more IRs to be included; currently testing functionality
+and impulse response(s) from Chris Warren's EchoThief: http://www.echothief.com/
+- more IRs to be included; currently testing functionality
 
 In its current state, only asks the user to select I/O drivers and then begins to play audio. 
 
