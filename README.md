@@ -8,7 +8,7 @@ TL:DW is that this is a technique to make drums sound awesome through dynamics a
 
 Uses Spotify's Pedalboard API: https://spotify.github.io/pedalboard/index.html
 
-and impulse response(s) from Chris Warren's EchoThief: http://www.echothief.com/
+Ambiances by EchoThief: http://www.echothief.com/
 - more IRs to be included; currently testing functionality
 
 In its current state, only asks the user to select I/O drivers and then begins to play audio. 

@@ -4,8 +4,8 @@ from UIClasses import Button
 from pedalboard.io import AudioStream
 
 # Parallel Bandpass Drum Dynamics, Harmonics, and Reverb Processing
+# PBPP-112 (Parallel Band Pass Processor for 15-112)
 # Written by Dilan Juan Leon for CMU 15-112 project2
-
 
 '''
 Sources:
@@ -13,7 +13,7 @@ Sources:
 Pedalboard:
 https://spotify.github.io/pedalboard/index.html
 
-Impulse Responses:
+Ambiances by EchoThief:
 http://www.echothief.com/
 
 '''
@@ -24,14 +24,24 @@ http://www.echothief.com/
 ###############################################################################
 
 #               ---------- general functions ----------
-
 def onAppStart(app):
-    app.width, app.height = 800, 800
+    app.windowSize = 500 # app.windowSize == app.height
+    app.width, app.height = int(app.windowSize*(3/4)), app.windowSize
     app.inputDevice = None
     app.outputDevice = None
     app.IOButtons = [ ]
     app.controlObjects = [ ]
     createIOButtons(app, AudioStream.input_device_names, 'input')
+
+def onResize(app):
+    app.windowSize = app.height
+    forceResizeTo3By4(app)
+
+def forceResizeTo3By4(app):
+    if app.width != int(app.height*3/4):
+        # If the w : h ratio is anything other than 3 : 4, force it to 3 : 4,
+        # always maintaining the height
+        app.width, app.height = int(app.height*3/4), app.height
 
 
 ########################## SET INPUTS SCREEN ############################
@@ -75,13 +85,13 @@ def inputsScreen_redrawAll(app):
             'Please select an input device.', app.width/2, app.height/9,
             size=app.height/20
             )
-        for button in app.IOButtons: button.draw()
+        for button in app.IOButtons: button.draw(app)
     else:
         drawLabel(
             'Please select an output device.', app.width/2, app.height/9,
             size=app.height/20
             )
-        for button in app.IOButtons: button.draw()
+        for button in app.IOButtons: button.draw(app)
 
 def inputsScreen_onMousePress(app, mX, mY):
     for button in app.IOButtons:
@@ -94,11 +104,12 @@ def inputsScreen_onMousePress(app, mX, mY):
 ############################# MAIN SCREEN ##############################
 
 def mainScreen_onScreenActivate(app):
-    for i in range(len(app.audio.effectOrder)):
-        app.controlObjects.append(
-            Button(str(type(app.audio.effectOrder)), app.width/2, 
-                   app.height/5+i*app.height/15, app.width/2, app.height/16,
-                   ))
+    # for i in range(len(app.audio.effectOrder)):
+    #     app.controlObjects.append(
+    #         Button(str(type(app.audio.effectOrder)), app.width/2, 
+    #                app.height/5+i*app.height/15, app.width/2, app.height/16,
+    #                ))
+    pass
 
 def mainScreen_redrawAll(app):
     drawRect(0, 0, app.width, app.height)
