@@ -17,7 +17,7 @@ Ambiances by EchoThief: http://www.echothief.com/
 In its current state, only asks the user to select I/O drivers and then begins to play audio. 
 
 TO DO in (more or less) order:
-- Implementation of 'Fader' class
+- Inverse percent transform for log knobs
 - UI layout
 - User interactible enabling/disabling of plugins
 - Tying a bunch of knobs to AudioHandler class parameters/functions
