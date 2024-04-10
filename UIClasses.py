@@ -1,6 +1,11 @@
 from cmu_graphics import *
 import math
 
+# inexcusably consulted stack overflow for one little thing:
+# this method is innacurate, but it's purely for UI so it doesn't matter
+# found in Knob -> draw() -> if mouseHold or alwaysShowVal
+# https://stackoverflow.com/questions/13479163/round-float-to-x-decimals
+
 # ####################    Button Class    #########################
 class Button:
     
@@ -47,19 +52,63 @@ class Button:
 # ########################    Knob Class    #############################
 class Knob:
 
-    def __init__(self, cx, cy, radius, min, max, functionCalled,
-                 curveFunction='linear', color='white', 
-                 accentColor='black', borderWidth=2):
+    def __init__(self, cx, cy, radius, min, max, defaultVal, function,
+                 curveFunction='linear', color='white', accentColor='black', 
+                 borderWidth=2, alwaysShowVal=False):
         self.cx, self.cy, self.radius = cx, cy, radius
         self.min, self.max = min, max
-        self.val = min
-        self.functionCalled = functionCalled
-        # TO DO: Implement non-linear knobs (for freq. for example)
+        self.defaultVal = defaultVal
+        self.percentTransform, self.inversePercentTransform = (
+            self.createCurveFunction(curveFunction))
+        self.resetPosition()
+        self.function = function
         self.color = color
         self.accentColor = accentColor
         self.borderWidth = borderWidth
+        self.alwaysShowVal=alwaysShowVal
         self.mouseHold = False
         self.lastY = None
+        self.recentClick = False # to check if the timer should be incremented
+        self.timer = 0          # to check if a knob has been double clicked
+    
+    def resetPosition(self):
+        # reset the position of the knob to default
+        self.val = self.defaultVal
+        # TO DO: Fix below line for log knobs
+        self.valPercent = self.inversePercentTransform()
+        
+    
+    def createCurveFunction(self, type):
+        # needed for aliasing reasons
+        if type == 'linear':
+            def percentTransform():
+                range = self.max - self.min
+                return range * self.valPercent/100 + self.min
+            def inversePercentTransform():
+                # normalizing to min = 0 means no risk of division by 0
+                adjustedMax = self.max - self.min   # sets min to 0
+                adjustedVal = self.val - self.min
+                return (adjustedVal/adjustedMax)*100
+        elif type == 'logarithmic':
+            # useful for non-linear things, like frequency and volume
+            def percentTransform():
+                range = self.max - self.min
+                percentLog = (
+                    # get the percent**2, add 1 (no log(0)), divide by 2*2
+                    # i.e. (100**2/(10**2)**2) = 1, therefore
+                    # log10(100**2)/4 = 1 and any % < 1 will scale by log10.
+                    # by squaring, the bottom of the range is less dense
+                    # (tested higher powers but the difference is negligible)
+                    (math.log10(self.valPercent**2 + 1))/4)
+                return range * percentLog + self.min
+            def inversePercentTransform():
+                # normalize to min = 0
+                adjustedMax = self.max - self.min
+                adjustedVal = self.val - self.min
+                # to be implemented
+                return 80 # placeholder
+        # If type is not 'linear' or 'logarithmic', code will crash here (good)
+        return percentTransform, inversePercentTransform
     
     def draw(self, app):
         x, y, r = self.getScaledXYRad(app)
@@ -68,18 +117,24 @@ class Knob:
                    borderWidth=self.borderWidth)
         x1, y1 = self.getPointOnEdge(x, y, r) # pass these in to not compute x2
         drawLine(x, y, x1, y1, fill=self.accentColor)
-        if self.mouseHold:
+        if self.mouseHold or self.alwaysShowVal:
             # When changing the parameter, display its value
             drawRect(x, y - r*1.5, r*1.3, r*0.9, fill=self.color, 
                      align='center', border=self.accentColor, 
                      borderWidth=self.borderWidth, opacity=50)
-            drawLabel(self.val, x, y - r*1.5, size=r*0.5, font='monospace',
+            if abs(self.val) < 10:
+                # display with decimal precision for numbers < 10
+                displayVal = format(self.val, '.1f')
+            else:
+                # otherwise int is fine
+                displayVal = int(self.val)
+            drawLabel(displayVal, x, y - r*1.5, size=r*0.5, font='monospace',
                       fill=self.accentColor)
     
     def getPointOnEdge(self, x, y, r):
-        # Get the desired angle of a particular value first
-        angleRads = math.pi*5/4 - (math.pi*3/2) * self.val/self.max
-        # then, return x, y - the coords of that on the unit circle times r
+        # Get the desired angle in radians of a particular value first
+        angleRads = math.pi*5/4 - (math.pi*3/2) * self.valPercent/100
+        # then, return x, y minus the coords of that on the unit circle times r
         return (x + math.cos(angleRads)*r, y - math.sin(angleRads)*r)
 
     def checkIfPressed(self, mX, mY, app):
@@ -87,13 +142,18 @@ class Knob:
         if ((x - mX)**2 + (y - mY)**2)**0.5 < r: # distance function
             self.mouseHold = True
             self.lastY = mY
+            if self.recentClick:
+                self.resetPosition()
+            self.recentClick = True
     
     def mouseDrag(self, mY, app):
+        # All the changes to the params based on knob position happen here
         if self.mouseHold:
-            self.val -= mY - self.lastY
+            self.valPercent -= mY - self.lastY # up is down
             self.checkBounds()
             self.lastY = mY
-            self.functionCalled(app, self.val)
+            self.val = self.percentTransform()
+            self.function(app, self.val)
     
     def mouseRelease(self):
         self.lastY = None
@@ -101,10 +161,17 @@ class Knob:
 
     def checkBounds(self):
         # Make sure the value stays within the min, max bounds
-        if self.val > self.max:
-            self.val = self.max
-        elif self.val < self.min:
-            self.val = self.min
+        if self.valPercent > 100:
+            self.valPercent = 100
+        elif self.valPercent < 0:
+            self.valPercent = 0
+    
+    def stepTimer(self, app):
+        if self.recentClick:
+            self.timer += 1
+            if self.timer > app.stepsPerSecond/5: # 200ms double click window
+                self.timer = 0
+                self.recentClick = False
 
     def getScaledXYRad(self, app):
         # similar to button class. returns scaled x, y, and radius
@@ -112,34 +179,6 @@ class Knob:
         scaledX, scaledY = self.cx*sizeConstant, self.cy*sizeConstant
         scaledRad = self.radius*sizeConstant
         return scaledX, scaledY, scaledRad
-
-# #######################   Fader Class    ################################
-class Fader:
-
-    def __init__(self, cx, yBottom, yTop, faderWidth, faderHeight, 
-                 functionCalled, min=-60, max=12, color='white', 
-                 accentColor='black', grooveWidth=5):
-        # faderWidth/Height refer to the clickable (or touchable IRL) part
-        self.cx = cx
-        self.yBottom, self.yTop = yBottom, yTop
-        self.faderWidth = faderWidth
-        self.faderHeight = faderHeight
-        self.functionCalled = functionCalled
-        self.min = min
-        self.max = max
-        self.color = color
-        self.accentColor = accentColor
-        self.grooveWidth = grooveWidth
-    
-    def getScaledXYWH(self, app):
-        sizeConstant = app.windowSize/500
-        scaledX = self.cx*sizeConstant
-        scaledYBottom = self.yBottom*sizeConstant
-        scaledYTop = self.yTop*sizeConstant
-        scaledFaderWidth = self.faderWidth*sizeConstant
-        scaledFaderHeight = self.faderHeight*sizeConstant
-        return (scaledX, scaledYBottom, scaledYTop, 
-                scaledFaderWidth, scaledFaderHeight)
 
 ######################### REMOVE FROM FINAL ###################################
 
@@ -158,7 +197,11 @@ def onAppStart(app):
     app.windowSize = 500
     app.width, app.height = int(app.windowSize*(3/4)), app.windowSize
     app.button = Button('press me', 50, 50, 50, 25, buttonFunction)
-    app.knob = Knob(200, 200, 30, 0, 100, knobFunction)
+    app.knob = Knob(200, 200, 30, -100, 6, 0, knobFunction, color='red',
+                    alwaysShowVal=True)
+    app.knoblog = Knob(260, 260, 30, -100, 6, 0, knobFunction, 
+                       curveFunction='logarithmic', alwaysShowVal=True)
+    app.altHeld = False
 
 def onResize(app):
     app.windowSize = app.height
@@ -173,15 +216,23 @@ def forceResizeTo3By4(app):
 def redrawAll(app):
     app.button.draw(app)
     app.knob.draw(app)
+    app.knoblog.draw(app)
 
 def onMousePress(app, mX, mY):
     app.button.checkIfPressed(mX, mY, app)
     app.knob.checkIfPressed(mX, mY, app)
+    app.knoblog.checkIfPressed(mX, mY, app)
 
 def onMouseDrag(app, mX, mY):
     app.knob.mouseDrag(mY, app)
+    app.knoblog.mouseDrag(mY, app)
 
 def onMouseRelease(app, mX, mY):
     app.knob.mouseRelease()
+    app.knoblog.mouseRelease()
+
+def onStep(app):
+    app.knob.stepTimer(app)
+    app.knoblog.stepTimer(app)
 
 testUIElements()
