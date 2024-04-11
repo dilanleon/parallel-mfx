@@ -1,6 +1,6 @@
 from AudioHandler import *
+from UIClasses import *
 from cmu_graphics import *
-from UIClasses import Button
 from pedalboard.io import AudioStream
 
 # Parallel Bandpass Drum Dynamics, Harmonics, and Reverb Processing
@@ -29,9 +29,6 @@ def onAppStart(app):
     app.width, app.height = int(app.windowSize*(3/4)), app.windowSize
     app.inputDevice = None
     app.outputDevice = None
-    app.IOButtons = [ ]
-    app.controlObjects = [ ]
-    createIOButtons(app, AudioStream.input_device_names, 'input')
 
 def onResize(app):
     app.windowSize = app.height
@@ -54,7 +51,7 @@ def createIOButtons(app, IOList, direction):
             Button(
                 IOList[i], app.width/2, app.height/5+i*app.height/15, 
                 app.width/2, app.height/16, getInputName, color='antiqueWhite', 
-                labelColor='darkSlateGray', font='arial'
+                labelColor='darkSlateGray', font='arial', boldText=True
                 )
             )
 
@@ -74,9 +71,8 @@ def makeIOSetterFunction(i, direction):
     return f
 #                 -------- api called functions --------
 def inputsScreen_onScreenActivate(app):
-    # Just make sure, since we're getting the user to select I/O,
-    # that there is no assigned I/O
-    app.inputDevice, app.outputDevice == None, None
+    app.IOButtons = [ ]
+    createIOButtons(app, AudioStream.input_device_names, 'input')
 
 def inputsScreen_redrawAll(app):
     drawRect(0, 0, app.width, app.height, fill='slateGray')
@@ -97,31 +93,126 @@ def inputsScreen_onMousePress(app, mX, mY):
     for button in app.IOButtons:
         button.checkIfPressed(mX, mY, app)
     if app.inputDevice != None and app.outputDevice != None:
-        app.audio = AudioHandler(app.inputDevice, app.outputDevice)
+        app.audio = AudioHandler(app.inputDevice, app.outputDevice, 
+                                 bufferSize=64)
         setActiveScreen('mainScreen')
-
 
 ############################# MAIN SCREEN ##############################
 
+#              -------- control helper functions -------
+def makeControlFunction(type):
+    # Functions used by knobs and buttons throughout the app
+    #                      --- buttons ---
+    def switchToInputsScreen(app):
+        # button always calls function(app), even if app isn't needed
+        # Need to find a way to end the audiostream here @TODO
+        app.audio.killStream() # doesnt work
+        app.inputDevice, app.outputDevice = None, None
+        setActiveScreen('inputsScreen')
+    def invertToggle(app):
+        app.audio.togglePlugin('Invert')
+    def compToggle(app):
+        app.audio.togglePlugin('Compressor')
+    def convolutionToggle(app):
+        app.audio.togglePlugin('Convolution')
+    def reverbToggle(app):
+        app.audio.togglePlugin('Reverb')
+    #                       --- knobs ---
+    def gainWet(app, newGain):
+        app.audio.changeWetGain(newGain)
+    def gainDry(app, newGain):
+        app.audio.changeDryGain(newGain)
+    #     put the functions in a dictionary and return the desired one
+    functionDict = {
+        'switchToInputsScreen':switchToInputsScreen,
+        'gainWet':gainWet,
+        'gainDry':gainDry,
+        'invert':invertToggle,
+        'comp':compToggle,
+        'reverb':reverbToggle,
+        'convolution':convolutionToggle
+        }
+    return functionDict[type]
+
+
+def makePluginControls(app):
+    app.activeKnobs += [
+        Knob(355, 445, 17, -60, 12, 0, makeControlFunction('gainWet'), 
+            curveFunction='logarithmic', color='darkRed', borderWidth=1),
+        Knob(315, 445, 17, -60, 12, 0, makeControlFunction('gainDry'),
+             curveFunction='logarithmic', color='lightSlateGray', 
+             borderWidth=1)
+    ]
+    app.activeButtons += [
+        Button('Compressor', 80, 70, 50, 20, makeControlFunction('comp'), 
+               color='midnightBlue', labelColor='mistyRose', borderWidth=2, 
+               font='arial', boldText=True, italicText=True),
+        Button('Invert', 80, 110, 50, 20, makeControlFunction('invert')),
+        Button(
+            'Convolution', 300, 40, 50, 20, makeControlFunction('convolution')
+               ),
+        Button('Reverb', 300, 150, 50, 20, makeControlFunction('reverb'))
+
+    ]
+#                  -----------------------------------
+
 def mainScreen_onScreenActivate(app):
-    # for i in range(len(app.audio.effectOrder)):
-    #     app.controlObjects.append(
-    #         Button(str(type(app.audio.effectOrder)), app.width/2, 
-    #                app.height/5+i*app.height/15, app.width/2, app.height/16,
-    #                ))
-    pass
+    app.activeButtons = [ ]
+    app.activeKnobs = [ ]
+    app.activeButtons.append(
+        Button('Edit I/O', 350, 487.5, 44, 12.5, 
+               makeControlFunction('switchToInputsScreen'), color='gray', 
+               labelColor='ghostWhite', font='arial',
+               border=None, italicText=True)
+               )
+    makePluginControls(app)
+    app.showMousePos = False
+
+def drawKnobLabels(sizeConstant):
+    drawLabel('dBwet', 355*sizeConstant, 468*sizeConstant, size=11*sizeConstant)
+    drawLabel('dBdry', 315*sizeConstant, 468*sizeConstant, size=11*sizeConstant)
 
 def mainScreen_redrawAll(app):
-    drawRect(0, 0, app.width, app.height)
-    drawLabel(
-        'Under Construction', app.width/2, app.height/2, size=40,
-              bold=True, fill='antiqueWhite')
-    drawLabel(
-        'sound will be coming through your speakers now', app.width/2,
-        app.height*8/9, bold=True, fill='antiqueWhite'
-              )
+    sizeConstant = app.height/500
+    drawRect(0, app.height*19/20, app.width, app.height/20, fill='dimGray')
+    drawLabel('PBPP-112', app.width/10, app.height*19.5/20, 
+              size=14*sizeConstant, bold=True, italic=True, fill='ghostWhite')
+    for button in app.activeButtons:
+        button.draw(app)
+    for knob in app.activeKnobs:
+        knob.draw(app)
+    drawKnobLabels(sizeConstant)
 
+def mainScreen_onMouseMove(app, mX, mY):
+    if app.showMousePos:    # useful for creating the UI
+        print(mX, mY)
+
+def mainScreen_onMousePress(app, mX, mY):
+    for button in app.activeButtons:
+        button.checkIfPressed(mX, mY, app)
+    for knob in app.activeKnobs:
+        knob.checkIfPressed(mX, mY, app)
+
+def mainScreen_onMouseDrag(app, mX, mY):
+    for knob in app.activeKnobs:
+        knob.mouseDrag(mY, app)
+
+def mainScreen_onMouseRelease(app, mX, mY):
+    for knob in app.activeKnobs:
+        knob.mouseRelease()
+
+def mainScreen_onStep(app):
+    for knob in app.activeKnobs:
+        knob.stepTimer(app)
+
+def mainScreen_onKeyPress(app, key):
+    if key == 'p':
+        app.showMousePos = not app.showMousePos
+
+
+################################# MAIN() ################################
 def main():
     runAppWithScreens('inputsScreen')
 
 main()
+

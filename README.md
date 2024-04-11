@@ -17,10 +17,11 @@ Ambiances by EchoThief: http://www.echothief.com/
 In its current state, only asks the user to select I/O drivers and then begins to play audio. 
 
 TO DO in (more or less) order:
-- Inverse percent transform for log knobs
 - UI layout
-- User interactible enabling/disabling of plugins
+- Fix Plugin Order
+- Fix killing of audioThread
 - Tying a bunch of knobs to AudioHandler class parameters/functions
+- Hover effects (so satisfying)
 - Figure out how to access the data within the AudioStream
 - 'Switch' class capable of toggling between two plugins for a given spot in the signal chain
 - VU meters?? Maybe impossible maybe very easy?? Haven't experimented

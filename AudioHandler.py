@@ -7,6 +7,12 @@ from pedalboard import (LadderFilter, Invert, NoiseGate, Compressor, Clipping,
 
 class AudioHandler:
 
+    def defRunStream(self):
+        def runStream():
+            audioThread = Thread(target=self.stream.run, daemon=True)
+            audioThread.start()
+        return runStream
+        
     def __init__(self, inputAudio, outputAudio, 
                  bufferSize=256, sampleRate=4800):
         # The API requires lists for Pedalboard, Mix, and Chain:
@@ -18,10 +24,9 @@ class AudioHandler:
                             sample_rate=sampleRate,
                             plugins=defaultPlugins,
                             allow_feedback=True)
-        # Note: by disabling allow_feedback, the user can be protected from
-        # their own potential stupidity. But for ease of testing, it is True.
-        self.audioThread = Thread(target=self.stream.run, daemon=True)
-        self.audioThread.start()
+        self.runStream = self.defRunStream() # delete this on close
+        self.runStream()
+        # maybe turn allow_feedback off?
         # The below dictionary will be called for plugin constructors as kwargs
         self.pluginParams = { 
             LadderFilter : {
@@ -30,15 +35,16 @@ class AudioHandler:
                 'resonance':0.0,
                 'drive':1.0
                 },
+            Invert : { },
             NoiseGate:{
-                'threshold_db':-60.0, # < -inf, > 0
+                'threshold_db':-60.0, 
                 'ratio':2.5,
                 'attack_ms':2.5,
                 'release_ms':250.0
                 },
             Compressor:{
-                'threshold_db':0.0, # < -inf, > 0
-                'ratio':2.0,
+                'threshold_db':0.0, 
+                'ratio':1.0,
                 'attack_ms':2.5,
                 'release_ms':250.0
                 },
@@ -81,6 +87,8 @@ class AudioHandler:
             self.chainTypes.append(type(plugin))
 
     def getInsertionIndex(self, plugin):
+        # @TODO FIX THIS FUCKING FUNCTION
+        # Filter|Invert|Gate|Compress|Clip|Distort|Reverb|Convolution|Gain
         if len(self.chainTypes) == 1:
             # In this case, gain is the only plugin, which should always be
             # last, so return 0
@@ -91,7 +99,30 @@ class AudioHandler:
             # through the expected order and if the next plugin is in the
             # list of active plugins, return the index ahead of it.
             if expectedNextPlugin in self.chainTypes:
-                return (self.chainTypes.index(expectedNextPlugin) - 1)
+                if self.chainTypes[0] == expectedNextPlugin:
+                    return 0
+                else:
+                    return (self.chainTypes.index(expectedNextPlugin) - 1)
+        raise Exception("The plugin you tried to add is not supported.")
+    
+    def pluginStrToType(self, pluginStr):
+        # probably not needed. @TODO
+        typeDict = {
+            'Filter':LadderFilter,
+            'Invert':Invert,
+            'Gate':NoiseGate,
+            'Compressor':Compressor,
+            'Clipping':Clipping,
+            'Distortion':Distortion,
+            'Reverb':Reverb,
+            'Convolution':Convolution
+        }
+        return typeDict[pluginStr]
+    
+    def updateChain(self, newChain):
+        # Update the entirety of self.stream.plugins (the only way that worked)
+        print(f'New Chain: {newChain}')
+        self.stream.plugins = Pedalboard( [Mix ( [Chain(newChain), Gain()] )] )
 
     def removePlugin(self, plugin):
         # Create a new chain object without the plugin
@@ -101,10 +132,26 @@ class AudioHandler:
                 pass
             else:
                 newChain.append(activePlugin)
-        # Update the entirety of self.stream.plugins (the only way that worked)
-        self.stream.plugins = Pedalboard( [Mix ( [Chain(newChain), Gain()] )] )
+        self.updateChain(newChain)
+    
+    def insertPlugin(self, plugin, index):
+        # Create a new chain object with the new plugin
+        newChain = [ ]
+        for i in range(len(self.stream.plugins[0][0])):
+            if i == index:
+                print(newChain[i:])
+                newChain.append(plugin)
+            newChain.append(self.stream.plugins[0][0][i])
+        self.updateChain(newChain)
+
+    def createPluginInstance(self, plugin):
+        # Make an instance of specified plugin with the correct parameters,
+        # as stored in self.pluginParams
+        params = self.pluginParams[plugin]
+        return plugin(**params)
 
     def togglePlugin(self, plugin):
+        plugin = self.pluginStrToType(plugin) # str -> type conversion
         # Plugin order should always be:
         # Filter|Invert|Gate|Compress|Clip|Distort|Reverb|Convolution|Gain
         # The user will not be allowed to toggle the Gain
@@ -113,12 +160,11 @@ class AudioHandler:
             self.removePlugin(plugin)
         else:
             insertionIndex = self.getInsertionIndex(plugin)
+            print(f'InsertionIndex:{insertionIndex}')
             insertedPlugin = self.createPluginInstance(plugin)
-            self.stream.plugins[0][0].insert(insertionIndex, plugin)
-    
-    def createPluginInstance(self, plugin):
-        # Make an instance of specified plugin with the correct parameters,
-        # as stored in self.pluginParams
-        params = self.pluginParams[plugin]
-        return plugin(**params)
+            self.insertPlugin(insertedPlugin, insertionIndex)
+            print('Sucessfully inserted plugin to chain')
+
+    def killStream(self):
+            del self.runStream
 

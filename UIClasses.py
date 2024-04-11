@@ -11,7 +11,8 @@ class Button:
     
     def __init__(self, labelText, cx, cy, width, height, function,
                  border='black', color='white', labelColor='black', 
-                 borderWidth=1, font='monospace', labelSize=None):
+                 borderWidth=1, font='monospace', labelSize=None,
+                 boldText=False, italicText=False):
         self.labelText = labelText
         self.cx, self.cy = cx, cy
         self.width, self.height = width, height
@@ -21,6 +22,8 @@ class Button:
         self.labelColor = labelColor
         self.borderWidth = borderWidth
         self.font = font
+        self.boldText = boldText
+        self.italicText = italicText
         if labelSize == None:
             self.labelSize = min(self.width/len(self.labelText)+3, self.height)
     
@@ -39,7 +42,8 @@ class Button:
         drawRect(x, y, w, h, fill=self.color, border=self.border, 
                  borderWidth=self.borderWidth, align='center')
         drawLabel(self.labelText, x, y, size=self.labelSize*sizeConstant,
-                  font=self.font, fill=self.labelColor, bold=True)
+                  font=self.font, fill=self.labelColor, bold=self.boldText,
+                  italic=self.italicText)
 
     def getScaledXYWH(self, app):
         # returns the scaled bounds of the button (base scale = 500px height)
@@ -74,24 +78,25 @@ class Knob:
     def resetPosition(self):
         # reset the position of the knob to default
         self.val = self.defaultVal
-        # TO DO: Fix below line for log knobs
         self.valPercent = self.inversePercentTransform()
-        
     
     def createCurveFunction(self, type):
         # needed for aliasing reasons
         if type == 'linear':
             def percentTransform():
+                # % in, value out
                 range = self.max - self.min
                 return range * self.valPercent/100 + self.min
             def inversePercentTransform():
+                # value in, % out
                 # normalizing to min = 0 means no risk of division by 0
-                adjustedMax = self.max - self.min   # sets min to 0
+                range = self.max - self.min
                 adjustedVal = self.val - self.min
-                return (adjustedVal/adjustedMax)*100
+                return (adjustedVal/range)*100
         elif type == 'logarithmic':
             # useful for non-linear things, like frequency and volume
             def percentTransform():
+                # % in, value out
                 range = self.max - self.min
                 percentLog = (
                     # get the percent**2, add 1 (no log(0)), divide by 2*2
@@ -102,12 +107,17 @@ class Knob:
                     (math.log10(self.valPercent**2 + 1))/4)
                 return range * percentLog + self.min
             def inversePercentTransform():
+                # value in, % out
                 # normalize to min = 0
-                adjustedMax = self.max - self.min
+                range = self.max - self.min
                 adjustedVal = self.val - self.min
+                scaledPercent = adjustedVal/range
+                # undo the logarithmic scaling(just percentLog in reverse)
+                return (10**(4 * scaledPercent) - 1)**0.5
                 # to be implemented
-                return 80 # placeholder
-        # If type is not 'linear' or 'logarithmic', code will crash here (good)
+        else:
+            raise Exception("ArgError: curveFunction must be 'linear'" +
+                            " or 'logarithmic'")
         return percentTransform, inversePercentTransform
     
     def draw(self, app):
@@ -144,6 +154,7 @@ class Knob:
             self.lastY = mY
             if self.recentClick:
                 self.resetPosition()
+                self.function(app, self.val)
             self.recentClick = True
     
     def mouseDrag(self, mY, app):
@@ -179,60 +190,3 @@ class Knob:
         scaledX, scaledY = self.cx*sizeConstant, self.cy*sizeConstant
         scaledRad = self.radius*sizeConstant
         return scaledX, scaledY, scaledRad
-
-######################### REMOVE FROM FINAL ###################################
-
-# TESTING STUFF
-
-def buttonFunction(app):
-    print('button pressed')
-
-def knobFunction(app, val):
-    print(val)
-
-def testUIElements():
-    runApp()
-
-def onAppStart(app):
-    app.windowSize = 500
-    app.width, app.height = int(app.windowSize*(3/4)), app.windowSize
-    app.button = Button('press me', 50, 50, 50, 25, buttonFunction)
-    app.knob = Knob(200, 200, 30, -100, 6, 0, knobFunction, color='red',
-                    alwaysShowVal=True)
-    app.knoblog = Knob(260, 260, 30, -100, 6, 0, knobFunction, 
-                       curveFunction='logarithmic', alwaysShowVal=True)
-    app.altHeld = False
-
-def onResize(app):
-    app.windowSize = app.height
-    forceResizeTo3By4(app)
-
-def forceResizeTo3By4(app):
-    if app.width != int(app.height*3/4):
-        # If the w : h ratio is anything other than 3 : 4, force it to 3 : 4,
-        # always maintaining the height
-        app.width, app.height = int(app.height*3/4), app.height
-
-def redrawAll(app):
-    app.button.draw(app)
-    app.knob.draw(app)
-    app.knoblog.draw(app)
-
-def onMousePress(app, mX, mY):
-    app.button.checkIfPressed(mX, mY, app)
-    app.knob.checkIfPressed(mX, mY, app)
-    app.knoblog.checkIfPressed(mX, mY, app)
-
-def onMouseDrag(app, mX, mY):
-    app.knob.mouseDrag(mY, app)
-    app.knoblog.mouseDrag(mY, app)
-
-def onMouseRelease(app, mX, mY):
-    app.knob.mouseRelease()
-    app.knoblog.mouseRelease()
-
-def onStep(app):
-    app.knob.stepTimer(app)
-    app.knoblog.stepTimer(app)
-
-testUIElements()
