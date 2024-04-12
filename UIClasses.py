@@ -12,7 +12,7 @@ class Button:
     def __init__(self, labelText, cx, cy, width, height, function,
                  border='black', color='white', labelColor='black', 
                  borderWidth=1, font='monospace', labelSize=None,
-                 boldText=False, italicText=False):
+                 boldText=False, italicText=False, drawAsToggled=False):
         self.labelText = labelText
         self.cx, self.cy = cx, cy
         self.width, self.height = width, height
@@ -24,6 +24,9 @@ class Button:
         self.font = font
         self.boldText = boldText
         self.italicText = italicText
+        self.drawAsToggled = drawAsToggled
+        if drawAsToggled:
+            self.toggled = False
         if labelSize == None:
             self.labelSize = min(self.width/len(self.labelText)+3, self.height)
     
@@ -34,6 +37,8 @@ class Button:
         if (scaledX - (scaledWidth/2) < mX < scaledX + (scaledWidth/2) and
             scaledY - (scaledHeight/2) < mY < scaledY + (scaledHeight/2)):
             self.function(app)
+            if self.drawAsToggled:
+                self.toggled = not self.toggled
         
     def draw(self, app):
         # Should only be called in redrawAll(app)
@@ -44,6 +49,9 @@ class Button:
         drawLabel(self.labelText, x, y, size=self.labelSize*sizeConstant,
                   font=self.font, fill=self.labelColor, bold=self.boldText,
                   italic=self.italicText)
+        if self.drawAsToggled and not self.toggled:
+            drawRect(x, y, w, h, fill=self.labelColor, border=None,
+                     opacity=50, align='center')
 
     def getScaledXYWH(self, app):
         # returns the scaled bounds of the button (base scale = 500px height)
@@ -149,7 +157,7 @@ class Knob:
             scaledH = r*0.9
             drawRect(x, y - r*1.5, scaledW, scaledH, fill=self.color, 
                      align='center', border=self.accentColor, 
-                     borderWidth=self.borderWidth, opacity=50)
+                     borderWidth=self.borderWidth)
             if abs(self.val) < 10 or 0 < self.val < 100:
                 # display decimals where possible (3 chars max)
                 displayVal = format(self.val, '.1f')

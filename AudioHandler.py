@@ -27,7 +27,8 @@ class AudioHandler:
         # maybe turn allow_feedback off?
         self.runStream = self.defRunStream() # delete this on close
         self.runStream()
-        self.dryGain, self.wetGain = 0.0, 0.0
+        self.dryGain, self.wetGain = 0.0, 0.0       # not stored in pluginParams
+        self.dryMute, self.wetMute = False, False   # same
         # The below dictionary will be called for plugin constructors as kwargs
         self.pluginParams = { 
             LadderFilter : {
@@ -58,15 +59,15 @@ class AudioHandler:
             Reverb:{
                 'room_size':0.5,
                 'damping':0.5,
-                'wet_level':0.33,
-                'dry_level':0.67,
+                'wet_level':0.5,
+                'dry_level':0.5,
                 'width':1.0,
                 'freeze_mode':0.0
                 },
             Convolution:{
                 'impulse_response_filename':'''EchoThiefImpulseResponseLibrary\
 /Underground/Batcave.wav''',
-                'mix':0.3
+                'mix':0.5
                 }
             }
         self.effectOrder = (LadderFilter, Invert, NoiseGate, Compressor, 
@@ -82,8 +83,25 @@ class AudioHandler:
     def changeWetGain(self, newGain):
         # Gain is always last within the wet chain
         self.stream.plugins[0][0][-1].gain_db = float(newGain)
-        # same reason
+        # stream.plugins gets overwritten on each param change
         self.wetGain = newGain
+    
+    def toggleDryMute(self):
+        if self.dryMute:
+            self.changeDryGain(self.prevDryGain)
+        else:
+            self.prevDryGain = self.dryGain
+            self.changeDryGain(-999)
+        self.dryMute = not self.dryMute
+            # even -60 dB is basically inaudible, this is easier than true mute
+    
+    def toggleWetMute(self):
+        if self.wetMute:
+            self.changeWetGain(self.prevWetGain)
+        else:
+            self.prevWetGain = self.wetGain
+            self.changeWetGain(-999)
+        self.wetMute = not self.wetMute
 
     def updateChainTypes(self):
         # Sets self.chainTypes to be a list of the plugin types currently in
@@ -181,7 +199,7 @@ class AudioHandler:
             exec(execStr)
             chainAsList = [plugin for plugin in self.stream.plugins[0][0]]
             # also, just changing the value doesn't work - 
-            # need to remake the whole pedalboard object... 
+            # we need to remake the whole pedalboard object... 
             # every time a knob is moved...
             self.updateChain(chainAsList)
 

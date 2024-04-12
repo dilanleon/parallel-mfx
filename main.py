@@ -114,7 +114,7 @@ def makeControlFunction(type):
     def invertToggle(app):
         app.audio.togglePlugin('Invert')
     def gateToggle(app):
-        app.audio.togglePlugin('NoiseGate')
+        app.audio.togglePlugin('Gate')
     def compToggle(app):
         app.audio.togglePlugin('Compressor')
     def clipToggle(app):
@@ -125,6 +125,10 @@ def makeControlFunction(type):
         app.audio.togglePlugin('Reverb')
     def convolutionToggle(app):
         app.audio.togglePlugin('Convolution')
+    def muteDry(app):
+        app.audio.toggleDryMute()
+    def muteWet(app):
+        app.audio.toggleWetMute()
     #                             *knobs*
     def changeFilterFrequency(app, newFrequency):
         app.audio.changePluginParam('Filter', 'cutoff_hz', newFrequency)
@@ -133,23 +137,23 @@ def makeControlFunction(type):
     def changeFilterDrive(app, newDrive):
         app.audio.changePluginParam('Filter', 'drive', newDrive)
     def changeGateThreshold(app, newThreshold):
-        app.audio.changePluginParam('NoiseGate', 'threshold_db', newThreshold)
+        app.audio.changePluginParam('Gate', 'threshold_db', newThreshold)
     def changeGateRatio(app, newRatio):
-        app.audio.changePluginParam('NoiseGate', 'ratio', newRatio)
+        app.audio.changePluginParam('Gate', 'ratio', newRatio)
     def changeGateAttack(app, newAttack):
-        app.audio.changePluginParam('NoiseGate', 'attack_ms', newAttack)
+        app.audio.changePluginParam('Gate', 'attack_ms', newAttack)
     def changeGateRelease(app, newRelease):
-        app.audio.changePluginParam('NoiseGate', 'release_ms', newRelease)
+        app.audio.changePluginParam('Gate', 'release_ms', newRelease)
     def changeCompThreshold(app, newThreshold):
         app.audio.changePluginParam('Compressor', 'threshold_db', newThreshold)
     def changeCompRatio(app, newRatio):
         app.audio.changePluginParam('Compressor', 'ratio', newRatio)
     def changeCompAttack(app, newAttack):
-        app.audio.changeParam('Compressor', 'attack_ms', newAttack)
+        app.audio.changePluginParam('Compressor', 'attack_ms', newAttack)
     def changeCompRelease(app, newRelease):
-        app.audio.changeParam('Compressor', 'release_ms', newRelease)
+        app.audio.changePluginParam('Compressor', 'release_ms', newRelease)
     def changeClippingThreshold(app, newThreshold):
-        app.audio.changeParam('Clipping', 'threshold_db', newThreshold)
+        app.audio.changePluginParam('Clipping', 'threshold_db', newThreshold)
     def changeDistortionGain(app, newGain):
         app.audio.changePluginParam('Distortion', 'drive_db', newGain)
     def changeReverbSize(app, newSize):
@@ -159,7 +163,7 @@ def makeControlFunction(type):
     def changeReverbDryWet(app, newWet):
         newDry = 1 - newWet
         app.audio.changePluginParam('Reverb', 'wet_level', newWet)
-        app.audio.changePluginparam('Reverb', 'dry_lebel', newDry)
+        app.audio.changePluginParam('Reverb', 'dry_level', newDry)
     def changeReverbWidth(app, newWidth):
         app.audio.changePluginParam('Reverb', 'width', newWidth)
     # @TODO Figure out what Reverb 'freeze mode' does and why it's a float
@@ -171,9 +175,6 @@ def makeControlFunction(type):
         app.audio.changeDryGain(newGain)
     #     put the functions in a dictionary and return the desired one
     functionDict = {        # holy fucking fuck
-        'switchToInputsScreen':switchToInputsScreen,
-        'gainWet':gainWet,
-        'gainDry':gainDry,
         'filter':filterToggle,
         'filterFreq':changeFilterFrequency,
         'filterResonance':changeFilterResonance,
@@ -199,42 +200,106 @@ def makeControlFunction(type):
         'reverbDryWet':changeReverbDryWet,
         'reverbWidth':changeReverbWidth,
         'convolution':convolutionToggle,
-        'convolutionMix':changeConvolutionMix
+        'convolutionMix':changeConvolutionMix,
+        'switchToInputsScreen':switchToInputsScreen,
+        'gainWet':gainWet,
+        'gainDry':gainDry,
+        'muteDry':muteDry,
+        'muteWet':muteWet
         }
     return functionDict[type]
 
 def makeControlObjects(app):
     app.activeKnobs = [
-        # wet gain
-        Knob(355, 445, 17, -60, 12, 0, makeControlFunction('gainWet'), 
-            curveFunction='logarithmic', color='darkRed', borderWidth=1,
-            label='dBwet'),
+        # filter freq
+        Knob(155, 30, 17, 20, 20000, 175, makeControlFunction('filterFreq'),
+             curveFunction='exponential', label='freq', color='gold'),
+        # filter resonance
+        Knob(200, 30, 17, 0, 1, 0, makeControlFunction('filterResonance'),
+             curveFunction='linear', label='reso', color='gold'),
+        # filter drive
+        Knob(245, 30, 17, 1, 10, 1, makeControlFunction('filterDrive'),
+             curveFunction='linear', label='drive', color='gold'),
+        # gate threshold
+        Knob(155, 130, 17, -60, 0, -60, makeControlFunction('gateThresh'),
+             curveFunction='logarithmic', label='thresh', color='khaki'),
+        # gate ratio
+        Knob(200, 130, 17, 1, 10, 2.5, makeControlFunction('gateRatio'),
+             curveFunction='linear', label='ratio', color='khaki'),
+        # gate attack
+        Knob(245, 130, 17, 0.1, 500, 2.5, makeControlFunction('gateAttack'), 
+             curveFunction='exponential', label='attack', color='khaki'),
+        # gate release
+        Knob(290, 130, 17, 1, 1000, 250, makeControlFunction('gateRelease'),
+            curveFunction='exponential', label='release', color='khaki'),
+        # compressor threshold
+        Knob(155, 180, 17, -60, 0, 0, makeControlFunction('compThresh'),
+             curveFunction='logarithmic', label='thresh', color='oliveDrab'),
+        # compressor ratio
+        Knob(200, 180, 17, 1, 20, 1, makeControlFunction('compRatio'), 
+             curveFunction='linear', label='ratio', color='oliveDrab'),
+        # compressor attack
+        Knob(245, 180, 17, 0.1, 500, 2.5, makeControlFunction('compAttack'),
+             curveFunction='exponential', label='attack', color='oliveDrab'),
+        # compressor release
+        Knob(290, 180, 17, 1, 1000, 250, makeControlFunction('compRelease'),
+             curveFunction='exponential', label='release', color='oliveDrab'),
+        #clipping threshold
+        Knob(155, 230, 17, -24, 0, 0, makeControlFunction('clipThresh'),
+             curveFunction='logarithmic', label='thresh', color='lime'),
+        # distortion gain
+        Knob(155, 280, 17, 0, 30, 0, makeControlFunction('distGain'), 
+             curveFunction='linear', label='gain', color='fireBrick'),
+        # reverb size
+        Knob(155, 330, 17, 0, 1, 0.5, makeControlFunction('reverbSize'),
+             curveFunction='linear', label='size', color='skyBlue'),
+        # reverb damping
+        Knob(200, 330, 17, 0, 1, 0.5, makeControlFunction('reverbDamping'),
+             curveFunction='linear', label='damping', color='skyBlue'),
+        # reverb dry/wet
+        Knob(245, 330, 17, 0, 1, 0.5, makeControlFunction('reverbDryWet'),
+             curveFunction='linear', label='dry/wet', color='skyBlue'),
+        # reverb width
+        Knob(290, 330, 17, 0, 1, 0.5, makeControlFunction('reverbWidth'),
+             curveFunction='linear', label='width', color='skyBlue'),
+        # convolution mix
+        Knob(155, 380, 17, 0, 1, 0.5, makeControlFunction('convolutionMix'),
+             curveFunction='linear', label='mix', color='thistle'),
         # dry gain
         Knob(315, 445, 17, -60, 12, 0, makeControlFunction('gainDry'),
              curveFunction='logarithmic', color='lightSlateGray', 
-             borderWidth=1, label='dBdry'),
-        # distortion gain
-        Knob(155, 230, 17, 0, 30, 0, makeControlFunction('distGain'), 
-             label='gain', color='red'),
-        # filter freq
-        Knob(155, 30, 17, 20, 20000, 175, makeControlFunction('filterFreq'),
-             curveFunction='exponential', label='frequency', color='gold')
+             label='dBdry'),
+        # wet gain
+        Knob(355, 445, 17, -60, 12, 0, makeControlFunction('gainWet'), 
+            curveFunction='logarithmic', color='darkRed', label='dBwet')
     ]
     app.activeButtons = [
         Button('Edit I/O', 350, 487.5, 44, 12.5, 
                makeControlFunction('switchToInputsScreen'), color='gray', 
                labelColor='ghostWhite', font='arial',
                border=None, italicText=True),
-        Button('Filter', 80, 30, 70, 20, makeControlFunction('filter')),
-        Button('Invert', 80, 80, 70, 20, makeControlFunction('invert')),
-        Button('Compressor', 80, 130, 70, 20, makeControlFunction('comp')),
-        Button('Clipping', 80, 180, 70, 20, makeControlFunction('clipper')),
-        Button(
-            'Distortion', 80, 230, 70, 20, makeControlFunction('distortion')),
-        Button('Reverb', 80, 280, 70, 20, makeControlFunction('reverb')),
-        Button(
-            'Convolution', 80, 330, 70, 20, makeControlFunction('convolution')
-               )
+        Button('Filter', 80, 30, 70, 20, makeControlFunction('filter'),
+               drawAsToggled=True),
+        Button('Invert', 80, 80, 70, 20, makeControlFunction('invert'),
+               drawAsToggled=True),
+        Button('Gate', 80, 130, 70, 20, makeControlFunction('gate'),
+               drawAsToggled=True),
+        Button('Compressor', 80, 180, 70, 20, makeControlFunction('comp'),
+               drawAsToggled=True),
+        Button('Clipping', 80, 230, 70, 20, makeControlFunction('clipper'),
+               drawAsToggled=True),
+        Button('Distortion', 80, 280, 70, 20, makeControlFunction('distortion'),
+               drawAsToggled=True),
+        Button('Reverb', 80, 330, 70, 20, makeControlFunction('reverb'),
+               drawAsToggled=True),
+        Button('Convolution', 80, 380, 70, 20, 
+               makeControlFunction('convolution'), drawAsToggled=True),
+        # mute dry
+        Button('M', 315, 420, 10, 10, makeControlFunction('muteDry'),
+               drawAsToggled=True, color='yellow'),
+        # mute wet
+        Button('M', 355, 420, 10, 10, makeControlFunction('muteWet'),
+               drawAsToggled=True, color='yellow')
     ]
 #                  -----------------------------------
 
