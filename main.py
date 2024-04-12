@@ -215,7 +215,7 @@ def makeControlObjects(app):
              curveFunction='logarithmic', color='lightSlateGray', 
              borderWidth=1, label='dBdry'),
         # distortion gain
-        Knob(155, 230, 17, 0, 30, 0, makeControlFunction('gainDist'))
+        Knob(155, 230, 17, 0, 30, 0, makeControlFunction('distGain'))
     ]
     app.activeButtons = [
         Button('Edit I/O', 350, 487.5, 44, 12.5, 
