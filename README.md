@@ -9,16 +9,13 @@ Equivalent signal chain in Pro Tools:
 
 <img width="158" alt="image" src="https://github.com/dilanleon/project2/assets/92342633/0a0b2908-764c-4a6b-b9bb-fabe0e1648fa">
 
-
 Uses Spotify's Pedalboard API: https://spotify.github.io/pedalboard/index.html
 
 Ambiances by EchoThief: http://www.echothief.com/
 
-Currently, displays a togleabble list of effects, with dry/wet fader knobs and a drive knob.
-All (most) functionality is working as expected and the only thing left is object-based implementation (EZPZ)
+Displays a toggleable list of effects, dry/wet mutes, and effect parameters that update in realtime
 
 TO DO in (more or less) order:
-- UI layout and implementation (functions already made)
 - Fix killing of audioThread
 - Does it really need clipping? make a decision about that
 - Make it look not like shit
