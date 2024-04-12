@@ -1,4 +1,4 @@
-from AudioHandler import *
+from AudioHandler import AudioHandler
 from UIClasses import *
 from cmu_graphics import *
 from pedalboard.io import AudioStream
@@ -94,78 +94,149 @@ def inputsScreen_onMousePress(app, mX, mY):
         button.checkIfPressed(mX, mY, app)
     if app.inputDevice != None and app.outputDevice != None:
         app.audio = AudioHandler(app.inputDevice, app.outputDevice, 
-                                 bufferSize=64)
+                                 bufferSize=256)
         setActiveScreen('mainScreen')
 
 ############################# MAIN SCREEN ##############################
 
-#              -------- control helper functions -------
+#                   -----     helpers       -----
 def makeControlFunction(type):
     # Functions used by knobs and buttons throughout the app
-    #                      --- buttons ---
+    #                        *buttons*
     def switchToInputsScreen(app):
         # button always calls function(app), even if app isn't needed
         # Need to find a way to end the audiostream here @TODO
         app.audio.killStream() # doesnt work
         app.inputDevice, app.outputDevice = None, None
         setActiveScreen('inputsScreen')
+    def filterToggle(app):
+        app.audio.togglePlugin('Filter')
     def invertToggle(app):
         app.audio.togglePlugin('Invert')
+    def gateToggle(app):
+        app.audio.togglePlugin('NoiseGate')
     def compToggle(app):
         app.audio.togglePlugin('Compressor')
-    def convolutionToggle(app):
-        app.audio.togglePlugin('Convolution')
+    def clipToggle(app):
+        app.audio.togglePlugin('Clipping')
+    def distortionToggle(app):
+        app.audio.togglePlugin('Distortion')
     def reverbToggle(app):
         app.audio.togglePlugin('Reverb')
-    #                       --- knobs ---
+    def convolutionToggle(app):
+        app.audio.togglePlugin('Convolution')
+    #                             *knobs*
+    def changeFilterFrequency(app, newFrequency):
+        app.audio.changePluginParam('LadderFilter', 'cutoff_hz', newFrequency)
+    def changeFilterResonance(app, newResonance):
+        app.audio.changePluginParam('LadderFilter', 'resonance', newResonance)
+    def changeFilterDrive(app, newDrive):
+        app.audio.changePluginParam('LadderFilter', 'drive', newDrive)
+    def changeGateThreshold(app, newThreshold):
+        app.audio.changePluginParam('NoiseGate', 'threshold_db', newThreshold)
+    def changeGateRatio(app, newRatio):
+        app.audio.changePluginParam('NoiseGate', 'ratio', newRatio)
+    def changeGateAttack(app, newAttack):
+        app.audio.changePluginParam('NoiseGate', 'attack_ms', newAttack)
+    def changeGateRelease(app, newRelease):
+        app.audio.changePluginParam('NoiseGate', 'release_ms', newRelease)
+    def changeCompThreshold(app, newThreshold):
+        app.audio.changePluginParam('Compressor', 'threshold_db', newThreshold)
+    def changeCompRatio(app, newRatio):
+        app.audio.changePluginParam('Compressor', 'ratio', newRatio)
+    def changeCompAttack(app, newAttack):
+        app.audio.changeParam('Compressor', 'attack_ms', newAttack)
+    def changeCompRelease(app, newRelease):
+        app.audio.changeParam('Compressor', 'release_ms', newRelease)
+    def changeClippingThreshold(app, newThreshold):
+        app.audio.changeParam('Clipping', 'threshold_db', newThreshold)
+    def changeDistortionGain(app, newGain):
+        app.audio.changePluginParam('Distortion', 'drive_db', newGain)
+    def changeReverbSize(app, newSize):
+        app.audio.changePluginParam('Reverb', 'room_size', newSize)
+    def changeReverbDamping(app, newDamping):
+        app.audio.changePluginParam('Reverb', 'damping', newDamping)
+    def changeReverbDryWet(app, newWet):
+        newDry = 1 - newWet
+        app.audio.changePluginParam('Reverb', 'wet_level', newWet)
+        app.audio.changePluginparam('Reverb', 'dry_lebel', newDry)
+    def changeReverbWidth(app, newWidth):
+        app.audio.changePluginParam('Reverb', 'width', newWidth)
+    # @TODO Figure out what Reverb 'freeze mode' does and why it's a float
+    def changeConvolutionMix(app, newMix):
+        app.audio.changePluginParam('Convolution', 'mix', newMix)
     def gainWet(app, newGain):
         app.audio.changeWetGain(newGain)
     def gainDry(app, newGain):
         app.audio.changeDryGain(newGain)
     #     put the functions in a dictionary and return the desired one
-    functionDict = {
+    functionDict = {        # holy fucking fuck
         'switchToInputsScreen':switchToInputsScreen,
         'gainWet':gainWet,
         'gainDry':gainDry,
+        'filter':filterToggle,
+        'filterFreq':changeFilterFrequency,
+        'filterResonance':changeFilterResonance,
+        'filterDrive':changeFilterDrive,
         'invert':invertToggle,
+        'gate':gateToggle,
+        'gateThresh':changeGateThreshold,
+        'gateRatio':changeGateRatio,
+        'gateAttack':changeGateAttack,
+        'gateRelease':changeGateRelease,
         'comp':compToggle,
+        'compThresh':changeCompThreshold,
+        'compRatio':changeCompRatio,
+        'compAttack':changeCompAttack,
+        'compRelease':changeCompRelease,
+        'clipper':clipToggle,
+        'clipThresh':changeClippingThreshold,
+        'distortion':distortionToggle,
+        'distGain':changeDistortionGain,
         'reverb':reverbToggle,
-        'convolution':convolutionToggle
+        'reverbSize':changeReverbSize,
+        'reverbDamping':changeReverbDamping,
+        'reverbDryWet':changeReverbDryWet,
+        'reverbWidth':changeReverbWidth,
+        'convolution':convolutionToggle,
+        'convolutionMix':changeConvolutionMix
         }
     return functionDict[type]
 
 
-def makePluginControls(app):
-    app.activeKnobs += [
+def makeControlObjects(app):
+    app.activeKnobs = [
+        # wet gain
         Knob(355, 445, 17, -60, 12, 0, makeControlFunction('gainWet'), 
-            curveFunction='logarithmic', color='darkRed', borderWidth=1),
+            curveFunction='logarithmic', color='darkRed', borderWidth=1,
+            label='dBwet'),
+        # dry gain
         Knob(315, 445, 17, -60, 12, 0, makeControlFunction('gainDry'),
              curveFunction='logarithmic', color='lightSlateGray', 
-             borderWidth=1)
+             borderWidth=1, label='dBdry'),
+        # distortion gain
+        Knob(155, 230, 17, 0, 30, 0, makeControlFunction('gainDist'))
     ]
-    app.activeButtons += [
-        Button('Compressor', 80, 70, 50, 20, makeControlFunction('comp'), 
-               color='midnightBlue', labelColor='mistyRose', borderWidth=2, 
-               font='arial', boldText=True, italicText=True),
-        Button('Invert', 80, 110, 50, 20, makeControlFunction('invert')),
+    app.activeButtons = [
+        Button('Edit I/O', 350, 487.5, 44, 12.5, 
+               makeControlFunction('switchToInputsScreen'), color='gray', 
+               labelColor='ghostWhite', font='arial',
+               border=None, italicText=True),
+        Button('Filter', 80, 30, 70, 20, makeControlFunction('filter')),
+        Button('Invert', 80, 80, 70, 20, makeControlFunction('invert')),
+        Button('Compressor', 80, 130, 70, 20, makeControlFunction('comp')),
+        Button('Clipping', 80, 180, 70, 20, makeControlFunction('clipper')),
         Button(
-            'Convolution', 300, 40, 50, 20, makeControlFunction('convolution')
-               ),
-        Button('Reverb', 300, 150, 50, 20, makeControlFunction('reverb'))
-
+            'Distortion', 80, 230, 70, 20, makeControlFunction('distortion')),
+        Button('Reverb', 80, 280, 70, 20, makeControlFunction('reverb')),
+        Button(
+            'Convolution', 80, 330, 70, 20, makeControlFunction('convolution')
+               )
     ]
 #                  -----------------------------------
 
 def mainScreen_onScreenActivate(app):
-    app.activeButtons = [ ]
-    app.activeKnobs = [ ]
-    app.activeButtons.append(
-        Button('Edit I/O', 350, 487.5, 44, 12.5, 
-               makeControlFunction('switchToInputsScreen'), color='gray', 
-               labelColor='ghostWhite', font='arial',
-               border=None, italicText=True)
-               )
-    makePluginControls(app)
+    makeControlObjects(app)
     app.showMousePos = False
 
 def drawKnobLabels(sizeConstant):
@@ -181,7 +252,7 @@ def mainScreen_redrawAll(app):
         button.draw(app)
     for knob in app.activeKnobs:
         knob.draw(app)
-    drawKnobLabels(sizeConstant)
+    #drawKnobLabels(sizeConstant)
 
 def mainScreen_onMouseMove(app, mX, mY):
     if app.showMousePos:    # useful for creating the UI
