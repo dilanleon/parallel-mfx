@@ -145,7 +145,7 @@ class Knob:
         drawLine(x, y, x1, y1, fill=self.accentColor)
         if self.mouseHold or self.alwaysShowVal:
             # When changing the parameter, display its value
-            scaledW = r*1.5
+            scaledW = r*1.7
             scaledH = r*0.9
             drawRect(x, y - r*1.5, scaledW, scaledH, fill=self.color, 
                      align='center', border=self.accentColor, 
@@ -153,9 +153,13 @@ class Knob:
             if abs(self.val) < 10 or 0 < self.val < 100:
                 # display decimals where possible (3 chars max)
                 displayVal = format(self.val, '.1f')
-            else:
-                # otherwise int is fine
+            elif abs(self.val) < 1000:
+                # int is fine for numbers less than 1k
                 displayVal = int(self.val)
+            else:
+                # display (thousands).(hundreds)k for other values
+                megaVal = format(self.val/1000, '.1f')
+                displayVal = f'{megaVal}k'
             drawLabel(displayVal, x, y - r*1.5, size=r*0.5, font='monospace',
                       fill=self.labelColor)
         if self.label != None:
