@@ -20,10 +20,11 @@ All (most) functionality is working as expected and the only thing left is objec
 TO DO in (more or less) order:
 - UI layout and implementation (functions already made)
 - Fix killing of audioThread
+- Does it really need clipping? make a decision about that
 - Make it look not like shit
 - Hover effects (so satisfying)
-- Figure out how to access the data within the AudioStream
 - 'Switch' class capable of toggling between two plugins for a given spot in the signal chain
+- Figure out how to access the data within the AudioStream
 - VU meters?? Maybe impossible maybe very easy?? Haven't experimented
 - Drop down menus (i.e. for IR select, filter select)
 - Verify functionality on Windows/Linux
