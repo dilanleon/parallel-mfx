@@ -17,21 +17,22 @@ class AudioHandler:
                  bufferSize=256, sampleRate=4800):
         # The API requires lists for Pedalboard, Mix, and Chain:
         # The indexes of Chain and Gain will never change
-        defaultPlugins = Pedalboard( [Mix ( [Chain( [ Gain() ] ), Gain()] )] ) 
+        defaultPlugins = Pedalboard( [Mix ( [Chain( [ Gain(0.0) ] ), Gain(0.0)] )] ) 
         self.stream = AudioStream(input_device_name=inputAudio, 
                             output_device_name=outputAudio,
                             buffer_size=bufferSize,
                             sample_rate=sampleRate,
                             plugins=defaultPlugins,
                             allow_feedback=True)
+        # maybe turn allow_feedback off?
         self.runStream = self.defRunStream() # delete this on close
         self.runStream()
-        # maybe turn allow_feedback off?
+        self.dryGain, self.wetGain = 0.0, 0.0
         # The below dictionary will be called for plugin constructors as kwargs
         self.pluginParams = { 
             LadderFilter : {
                 'mode':LadderFilter.BPF12,
-                'cuttof_hz':175.0,
+                'cutoff_hz':175.0,
                 'resonance':0.0,
                 'drive':1.0
                 },
@@ -58,7 +59,7 @@ class AudioHandler:
                 'room_size':0.5,
                 'damping':0.5,
                 'wet_level':0.33,
-                'dry_level':0.0,
+                'dry_level':0.67,
                 'width':1.0,
                 'freeze_mode':0.0
                 },
@@ -74,10 +75,15 @@ class AudioHandler:
     def changeDryGain(self, newGain):
         # Gain is always last
         self.stream.plugins[0][-1].gain_db = float(newGain)
+        # this property needed for plugin toggling which overwrites
+        # its value in self.stream.plugins
+        self.dryGain = newGain
     
     def changeWetGain(self, newGain):
         # Gain is always last within the wet chain
         self.stream.plugins[0][0][-1].gain_db = float(newGain)
+        # same reason
+        self.wetGain = newGain
 
     def updateChainTypes(self):
         # Sets self.chainTypes to be a list of the plugin types currently in
@@ -87,7 +93,6 @@ class AudioHandler:
             self.chainTypes.append(type(plugin))
 
     def getInsertionIndex(self, plugin):
-        # @TODO FIX THIS FUCKING FUNCTION
         # Filter|Invert|Gate|Compress|Clip|Distort|Reverb|Convolution|Gain
         if len(self.chainTypes) == 1:
             # In this case, gain is the only plugin, which should always be
@@ -99,14 +104,10 @@ class AudioHandler:
             # through the expected order and if the next plugin is in the
             # list of active plugins, return the index ahead of it.
             if expectedNextPlugin in self.chainTypes:
-                if self.chainTypes[0] == expectedNextPlugin:
-                    return 0
-                else:
-                    return (self.chainTypes.index(expectedNextPlugin) - 1)
+                return self.chainTypes.index(expectedNextPlugin)
         raise Exception("The plugin you tried to add is not supported.")
     
     def pluginStrToType(self, pluginStr):
-        # probably not needed. @TODO
         typeDict = {
             'Filter':LadderFilter,
             'Invert':Invert,
@@ -122,7 +123,11 @@ class AudioHandler:
     def updateChain(self, newChain):
         # Update the entirety of self.stream.plugins (the only way that worked)
         print(f'New Chain: {newChain}')
-        self.stream.plugins = Pedalboard( [Mix ( [Chain(newChain), Gain()] )] )
+        self.stream.plugins = Pedalboard( [
+                                        Mix ( [
+                                            Chain(newChain), Gain(self.dryGain)
+                                            ] )
+                                        ] )
 
     def removePlugin(self, plugin):
         # Create a new chain object without the plugin
@@ -160,10 +165,28 @@ class AudioHandler:
             self.removePlugin(plugin)
         else:
             insertionIndex = self.getInsertionIndex(plugin)
-            print(f'InsertionIndex:{insertionIndex}')
             insertedPlugin = self.createPluginInstance(plugin)
             self.insertPlugin(insertedPlugin, insertionIndex)
-            print('Sucessfully inserted plugin to chain')
+
+    def changePluginParam(self, plugin, paramName, value):
+        plugin = self.pluginStrToType(plugin)
+        self.updateChainTypes()
+        # Weather the plugin is enabled or not, self.pluginParams needs updated
+        self.pluginParams[plugin][paramName] = value
+        if plugin in self.chainTypes:
+            pluginIndex = self.chainTypes.index(plugin)
+            # https://www.geeksforgeeks.org/execute-string-code-python/
+            # do it like this because it's cleaner than ifs
+            # plugin.paramName = value doesn't work :(
+            execStr = (
+               f'self.stream.plugins[0][0][{pluginIndex}].{paramName} = {value}'
+            )
+            exec(execStr)
+            chainAsList = [plugin for plugin in self.stream.plugins[0][0]]
+            # also, just changing the value doesn't work - 
+            # need to remake the whole pedalboard object... 
+            # every time a knob is moved...
+            self.updateChain(chainAsList)
 
     def killStream(self):
             del self.runStream
