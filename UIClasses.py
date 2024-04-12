@@ -118,9 +118,22 @@ class Knob:
                 # undo the logarithmic scaling(just percentLog in reverse)
                 return (10**(4 * scaledPercent) - 1)**0.5
                 # to be implemented
+        elif type == 'exponential':
+            def percentTransform():
+                # % in, value out
+                range = self.max - self.min
+                # higher power = steeper curve, 4 is a nice middle ground
+                scaledPercent = self.valPercent**4/100**4
+                return range * scaledPercent + self.min
+            def inversePercentTransform():
+                # value in, % out
+                range = self.max - self.min
+                adjustedVal = self.val - self.min
+                scaledPercent = adjustedVal/range
+                return (scaledPercent*100**4)**0.25
         else:
             raise Exception("ArgError: curveFunction must be 'linear'" +
-                            " or 'logarithmic'")
+                            " or 'logarithmic' or 'exponential'")
         return percentTransform, inversePercentTransform
     
     def draw(self, app):

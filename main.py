@@ -127,11 +127,11 @@ def makeControlFunction(type):
         app.audio.togglePlugin('Convolution')
     #                             *knobs*
     def changeFilterFrequency(app, newFrequency):
-        app.audio.changePluginParam('LadderFilter', 'cutoff_hz', newFrequency)
+        app.audio.changePluginParam('Filter', 'cutoff_hz', newFrequency)
     def changeFilterResonance(app, newResonance):
-        app.audio.changePluginParam('LadderFilter', 'resonance', newResonance)
+        app.audio.changePluginParam('Filter', 'resonance', newResonance)
     def changeFilterDrive(app, newDrive):
-        app.audio.changePluginParam('LadderFilter', 'drive', newDrive)
+        app.audio.changePluginParam('Filter', 'drive', newDrive)
     def changeGateThreshold(app, newThreshold):
         app.audio.changePluginParam('NoiseGate', 'threshold_db', newThreshold)
     def changeGateRatio(app, newRatio):
@@ -203,7 +203,6 @@ def makeControlFunction(type):
         }
     return functionDict[type]
 
-
 def makeControlObjects(app):
     app.activeKnobs = [
         # wet gain
@@ -215,7 +214,11 @@ def makeControlObjects(app):
              curveFunction='logarithmic', color='lightSlateGray', 
              borderWidth=1, label='dBdry'),
         # distortion gain
-        Knob(155, 230, 17, 0, 30, 0, makeControlFunction('distGain'))
+        Knob(155, 230, 17, 0, 30, 0, makeControlFunction('distGain'), 
+             label='gain', color='red'),
+        # filter freq
+        Knob(155, 30, 17, 20, 20000, 175, makeControlFunction('filterFreq'),
+             curveFunction='exponential', label='frequency', color='gold')
     ]
     app.activeButtons = [
         Button('Edit I/O', 350, 487.5, 44, 12.5, 
@@ -239,10 +242,6 @@ def mainScreen_onScreenActivate(app):
     makeControlObjects(app)
     app.showMousePos = False
 
-def drawKnobLabels(sizeConstant):
-    drawLabel('dBwet', 355*sizeConstant, 468*sizeConstant, size=11*sizeConstant)
-    drawLabel('dBdry', 315*sizeConstant, 468*sizeConstant, size=11*sizeConstant)
-
 def mainScreen_redrawAll(app):
     sizeConstant = app.height/500
     drawRect(0, app.height*19/20, app.width, app.height/20, fill='dimGray')
@@ -252,7 +251,6 @@ def mainScreen_redrawAll(app):
         button.draw(app)
     for knob in app.activeKnobs:
         knob.draw(app)
-    #drawKnobLabels(sizeConstant)
 
 def mainScreen_onMouseMove(app, mX, mY):
     if app.showMousePos:    # useful for creating the UI
