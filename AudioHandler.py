@@ -17,7 +17,7 @@ class AudioHandler:
                  bufferSize=256, sampleRate=4800):
         # The API requires lists for Pedalboard, Mix, and Chain:
         # The indexes of Chain and Gain will never change
-        defaultPlugins = Pedalboard( [Mix ( [Chain( [ Gain(0.0) ] ), Gain(0.0)] )] ) 
+        defaultPlugins = Pedalboard([Mix([Chain([Gain(0.0)]), Gain(0.0)])]) 
         self.stream = AudioStream(input_device_name=inputAudio, 
                             output_device_name=outputAudio,
                             buffer_size=bufferSize,
@@ -123,11 +123,8 @@ class AudioHandler:
     def updateChain(self, newChain):
         # Update the entirety of self.stream.plugins (the only way that worked)
         print(f'New Chain: {newChain}')
-        self.stream.plugins = Pedalboard( [
-                                        Mix ( [
-                                            Chain(newChain), Gain(self.dryGain)
-                                            ] )
-                                        ] )
+        self.stream.plugins = Pedalboard([
+            Mix([Chain(newChain), Gain(self.dryGain)])])
 
     def removePlugin(self, plugin):
         # Create a new chain object without the plugin
