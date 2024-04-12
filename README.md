@@ -14,19 +14,18 @@ Uses Spotify's Pedalboard API: https://spotify.github.io/pedalboard/index.html
 
 Ambiances by EchoThief: http://www.echothief.com/
 
-In its current state, only asks the user to select I/O drivers and then begins to play audio. 
+Currently, displays a togleabble list of effects, with dry/wet fader knobs and a drive knob.
+All (most) functionality is working as expected and the only thing left is object-based implementation (EZPZ)
 
 TO DO in (more or less) order:
-- UI layout
-- Fix Plugin Order
+- UI layout and implementation (functions already made)
 - Fix killing of audioThread
-- Tying a bunch of knobs to AudioHandler class parameters/functions
+- Make it look not like shit
 - Hover effects (so satisfying)
 - Figure out how to access the data within the AudioStream
 - 'Switch' class capable of toggling between two plugins for a given spot in the signal chain
 - VU meters?? Maybe impossible maybe very easy?? Haven't experimented
 - Drop down menus (i.e. for IR select, filter select)
 - Verify functionality on Windows/Linux
-- Verify functionality through Pro Tools Audio Bridge/other virtual sound drivers
 - Figure out VST/AAX support? might be a pipe dream (probably)
 - Super duper pretty-fication (like a Universal Audio plugin)
