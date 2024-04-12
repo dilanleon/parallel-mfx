@@ -58,16 +58,19 @@ class Knob:
 
     def __init__(self, cx, cy, radius, min, max, defaultVal, function,
                  curveFunction='linear', color='white', accentColor='black', 
-                 borderWidth=2, alwaysShowVal=False):
+                 borderWidth=2, alwaysShowVal=False, label=None, 
+                 labelColor='black'):
         self.cx, self.cy, self.radius = cx, cy, radius
         self.min, self.max = min, max
         self.defaultVal = defaultVal
         self.percentTransform, self.inversePercentTransform = (
             self.createCurveFunction(curveFunction))
+        self.label=label
         self.resetPosition()
         self.function = function
         self.color = color
         self.accentColor = accentColor
+        self.labelColor = labelColor
         self.borderWidth = borderWidth
         self.alwaysShowVal=alwaysShowVal
         self.mouseHold = False
@@ -129,17 +132,22 @@ class Knob:
         drawLine(x, y, x1, y1, fill=self.accentColor)
         if self.mouseHold or self.alwaysShowVal:
             # When changing the parameter, display its value
-            drawRect(x, y - r*1.5, r*1.3, r*0.9, fill=self.color, 
+            scaledW = r*1.5
+            scaledH = r*0.9
+            drawRect(x, y - r*1.5, scaledW, scaledH, fill=self.color, 
                      align='center', border=self.accentColor, 
                      borderWidth=self.borderWidth, opacity=50)
-            if abs(self.val) < 10:
-                # display with decimal precision for numbers < 10
+            if abs(self.val) < 10 or 0 < self.val < 100:
+                # display decimals where possible (3 chars max)
                 displayVal = format(self.val, '.1f')
             else:
                 # otherwise int is fine
                 displayVal = int(self.val)
             drawLabel(displayVal, x, y - r*1.5, size=r*0.5, font='monospace',
-                      fill=self.accentColor)
+                      fill=self.labelColor)
+        if self.label != None:
+            drawLabel(self.label, x, y + r*1.33, size=11*sizeConstant, 
+                      fill=self.labelColor)
     
     def getPointOnEdge(self, x, y, r):
         # Get the desired angle in radians of a particular value first
