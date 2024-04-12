@@ -58,7 +58,7 @@ class Knob:
 
     def __init__(self, cx, cy, radius, min, max, defaultVal, function,
                  curveFunction='linear', color='white', accentColor='black', 
-                 borderWidth=2, alwaysShowVal=False, label=None, 
+                 borderWidth=1, alwaysShowVal=False, label=None, 
                  labelColor='black'):
         self.cx, self.cy, self.radius = cx, cy, radius
         self.min, self.max = min, max
