@@ -41,40 +41,42 @@ class Button:
                 scaledY - (scaledHeight/2) < mY < scaledY + (scaledHeight/2))
     
     def checkIfPressed(self, mX, mY, app):
-        # If the button is pressed, call its assigned function
-        # scale by sizeConstant to check by where the button actually is
+        # If the button is pressed, call its assigned function:
         if self.isMouseInside(mX, mY):
             self.function(app)
+            # if it's toggleable, toggle it:
             if self.drawAsToggled:
                 self.toggled = not self.toggled
     
     def mouseMove(self, mX, mY):
-        # hovering effect
+        # 1/2 of the hovering effect:
         if self.isMouseInside(mX, mY):
             self.hovered = True
         else:
             self.hovered = False
         
     def draw(self, app):
-        # Should only be called in redrawAll(app)
         x, y, w, h = self.getScaledXYWH(app)
-        sizeConstant = app.windowSize/500
+        sizeConstant = app.windowSize/app.baseWindowSize
+        # set border color based on if hovered:
         if self.hovered:
             borderColor = self.hoverBorderColor
         else:
             borderColor = self.border
+        # draw the stuff that's always visible:
         drawRect(x, y, w, h, fill=self.color, border=borderColor, 
                  borderWidth=self.borderWidth, align='center')
         drawLabel(self.labelText, x, y, size=self.labelSize*sizeConstant,
                   font=self.font, fill=self.labelColor, bold=self.boldText,
                   italic=self.italicText)
+        # if untoggled, make it darker:
         if self.drawAsToggled and not self.toggled:
-            drawRect(x, y, w, h, fill=self.labelColor, border=borderColor,
-                     opacity=50, align='center')
+            drawRect(x, y, w, h, fill='black', border=borderColor,
+                     opacity=45, align='center')
 
     def getScaledXYWH(self, app):
-        # returns the scaled bounds of the button (base scale = 500px height)
-        sizeConstant = app.windowSize/500
+        # returns the scaled bounds of the button
+        sizeConstant = app.windowSize/app.baseWindowSize
         scaledX, scaledY = self.cx*sizeConstant, self.cy*sizeConstant
         scaledWidth = self.width*sizeConstant 
         scaledHeight = self.height*sizeConstant
@@ -92,20 +94,20 @@ class Knob:
         self.defaultVal = defaultVal
         self.percentTransform, self.inversePercentTransform = (
             self.createCurveFunction(curveFunction))
-        self.label=label
-        self.resetPosition()
+        self.resetPosition() # set val and valPercent to their defaults
         self.function = function
+        self.label=label
         self.color = color
         self.accentColor = accentColor
         self.labelColor = labelColor
         self.borderWidth = borderWidth
-        self.alwaysShowVal=alwaysShowVal
         self.percentKnob = percentKnob # bool -> self.val represents a percent
-        self.mouseHold = False
-        self.lastY = None
-        self.recentClick = False # to check if the timer should be incremented
+        self.alwaysShowVal=alwaysShowVal
+        self.mouseHold = False         # is this knob being modified?
+        self.lastY = None              # by how much? (Y - lastY)
+        self.recentClick = False       # was the button recently clicked?
         self.timer = 0          # to check if a knob has been double clicked
-        self.sensitivity = 8
+        self.sensitivity = 8    # multiplier for deltaY in knob drag
     
     def resetPosition(self):
         # reset the position of the knob to default
@@ -131,53 +133,65 @@ class Knob:
             def percentTransform():
                 # % in, value out
                 range = self.max - self.min
-                percentLog = (
-                    # get the percent**2, add 1 (no log(0)), divide by 2*2
-                    # i.e. (100**2/(10**3)**2) = 1, therefore
-                    # log10(100**2)/4 = 1 and any % < 1 will scale by log10.
-                    # by squaring, the bottom of the range is less dense
-                    # (tested higher powers but the difference is negligible)
-                    (math.log10(self.valPercent**2 + 1))/6)
+                # get the percent**2, add 1 (no log(0)), divide by 2*2
+                # i.e. (1000**3/(10**3)**3) = 1, therefore
+                # log10(1000**3)/4 = 1 and any % < 1 will scale by log10.
+                # by cubing valPercent, the bottom of the range is less dense
+                # (tested higher powers but the difference is negligible)
+                percentLog = (math.log10(self.valPercent**3 + 1))/9
                 return range * percentLog + self.min
             def inversePercentTransform():
                 # value in, % out
                 # normalize to min = 0
                 range = self.max - self.min
                 adjustedVal = self.val - self.min
+                # get the percentage scaled by percentLog:
                 scaledPercent = adjustedVal/range
-                # undo the logarithmic scaling(just percentLog in reverse)
-                return (10**(6 * scaledPercent) - 1)**0.5
-                # to be implemented
+                # undo the logarithmic scaling(percentLog in reverse):
+                return (10**(9 * scaledPercent) - 1)**(1/3)
         elif type == 'exponential':
             def percentTransform():
                 # % in, value out
                 range = self.max - self.min
-                # higher power = steeper curve, 4 is a nice middle ground
-                scaledPercent = self.valPercent**4/1000**4
+                # higher power = steeper curve, 3 is arbitrary
+                scaledPercent = self.valPercent**3/1000**3
                 return range * scaledPercent + self.min
             def inversePercentTransform():
                 # value in, % out
                 range = self.max - self.min
                 adjustedVal = self.val - self.min
+                # get the percentage scaled by the above:
                 scaledPercent = adjustedVal/range
-                return (scaledPercent*1000**4)**0.25
+                # do the inverse of the above scaling:
+                return (scaledPercent*1000**3)**(1/3)
         else:
+            # we are all dumbasses who mispell things, so crash and tell me why
             raise Exception("ArgError: curveFunction must be 'linear'" +
                             " or 'logarithmic' or 'exponential'")
         return percentTransform, inversePercentTransform
     
+    def getPointOnEdge(self, x, y, r):
+        # Get the desired angle in radians of a particular value first
+        angleRads = math.pi*5/4 - (math.pi*3/2) * self.valPercent/1000
+        # then, return x, y minus the coords of that on the unit circle times r
+        return (x + math.cos(angleRads)*r, y - math.sin(angleRads)*r)
+    
     def draw(self, app):
         x, y, r = self.getScaledXYRad(app)
-        sizeConstant = app.windowSize/500
+        sizeConstant = app.windowSize/app.baseWindowSize
+        # draw the circle:
         drawCircle(x, y, r, fill=self.color, border=self.accentColor,
                    borderWidth=self.borderWidth)
+        # get the point along the circle corresponding to knob position:
         x1, y1 = self.getPointOnEdge(x, y, r) # pass these in to not compute x2
+        # draw a line between center and that point:
         drawLine(x, y, x1, y1, fill=self.accentColor)
         if self.mouseHold or self.alwaysShowVal:
-            # When changing the parameter, display its value
-            scaledW = r*1.7
-            scaledH = r*0.9
-            drawRect(x, y - r*1.5, scaledW, scaledH, fill=self.color, 
+            # When changing the parameter or on alwaysShowVal, display its value
+            scaledW = r*1.7 # arbitrary
+            scaledH = r*0.9 # arbitrary
+            distanceY = r*1.5 # arbitrary
+            drawRect(x, y - distanceY, scaledW, scaledH, fill=self.color, 
                      align='center', border=self.accentColor, 
                      borderWidth=self.borderWidth)
             if self.percentKnob:
@@ -196,40 +210,26 @@ class Knob:
                 # else, display (thousands).(hundreds)k
                 megaVal = format(self.val/1000, '.1f')
                 displayVal = f'{megaVal}k'
-            drawLabel(displayVal, x, y - r*1.5, size=r*0.5, font='monospace',
+            # r*0.5 is also arbitrary
+            drawLabel(displayVal, x, y - distanceY, size=r*0.5, font='arial',
                       fill=self.labelColor)
         if self.label != None:
+            # as is r*1.33 (all of these values just looked good)
             drawLabel(self.label, x, y + r*1.33, size=11*sizeConstant, 
                       fill=self.labelColor)
-    
-    def getPointOnEdge(self, x, y, r):
-        # Get the desired angle in radians of a particular value first
-        angleRads = math.pi*5/4 - (math.pi*3/2) * self.valPercent/1000
-        # then, return x, y minus the coords of that on the unit circle times r
-        return (x + math.cos(angleRads)*r, y - math.sin(angleRads)*r)
+
+    def mouseInKnob(self, mX, mY, app):
+        x, y, r = self.getScaledXYRad(app)
+        return ((x - mX)**2 + (y - mY)**2)**0.5 < r
 
     def checkIfPressed(self, mX, mY, app):
-        x, y, r = self.getScaledXYRad(app)
-        if ((x - mX)**2 + (y - mY)**2)**0.5 < r: # distance function
+        if self.mouseInKnob(mX, mY, app):
             self.mouseHold = True
             self.lastY = mY
-            if self.recentClick:
+            if self.recentClick:    # check for double click and reset
                 self.resetPosition()
                 self.function(app, self.val)
-            self.recentClick = True
-    
-    def mouseDrag(self, mY, app):
-        # All the changes to the params based on knob position happen here
-        if self.mouseHold:
-            self.valPercent -= (mY - self.lastY)*self.sensitivity
-            self.checkBounds()
-            self.lastY = mY
-            self.val = self.percentTransform()
-            self.function(app, self.val)
-    
-    def mouseRelease(self):
-        self.lastY = None
-        self.mouseHold = False
+            self.recentClick = True # gets set to false by self.stepTimer
 
     def checkBounds(self):
         # Make sure the value stays within the min, max bounds
@@ -238,14 +238,32 @@ class Knob:
         elif self.valPercent < 0:
             self.valPercent = 0
     
+    def mouseDrag(self, mY, app):
+        # All the changes to the params based on knob position happen here
+        if self.mouseHold:
+            # change the percent, so log/exponential scaling works
+            self.valPercent -= (mY - self.lastY)*self.sensitivity
+            self.checkBounds()  # limits % to 0 < % < 1000
+            self.lastY = mY     # reset distance measurement
+            self.val = self.percentTransform() # change val by the curve
+            self.function(app, self.val)    # change whatever this knob changes
+    
+    def mouseRelease(self):
+        self.mouseHold = False
+
+    
     def stepTimer(self, app):
+        # count for 200ms after being clicked for double click check
         if self.recentClick:
+            # add time
             self.timer += 1
-            if self.timer > app.stepsPerSecond/5: # 200ms double click window
+            if self.timer > app.stepsPerSecond/5:
+                # reset timer
                 self.timer = 0
                 self.recentClick = False
     
     def toggleLowSens(self):
+        # if it's one, make it the other
         if self.sensitivity == 8:
             self.sensitivity = 1
         else:
@@ -253,7 +271,7 @@ class Knob:
 
     def getScaledXYRad(self, app):
         # similar to button class. returns scaled x, y, and radius
-        sizeConstant = app.windowSize/500
+        sizeConstant = app.windowSize/app.baseWindowSize
         scaledX, scaledY = self.cx*sizeConstant, self.cy*sizeConstant
         scaledRad = self.radius*sizeConstant
         return scaledX, scaledY, scaledRad

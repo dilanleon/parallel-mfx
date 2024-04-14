@@ -17,9 +17,11 @@ Displays a toggleable list of effects, dry/wet mutes, and effect parameters that
 
 TO DO in (more or less) order:
 - Fix killing of audioThread
-- Does it really need clipping? make a decision about that
+- Idiot check screen if input/output are laptop mic/speakers
+- bug: double-clicking gain knobs overrides mute
+- Compressor Makeup Gain
 - Make it look not like shit
-- Hover effects (so satisfying)
+- User selectable buffer size/sample rate on launch
 - 'Switch' class capable of toggling between two plugins for a given spot in the signal chain
 - Figure out how to access the data within the AudioStream
 - VU meters?? Maybe impossible maybe very easy?? Haven't experimented
