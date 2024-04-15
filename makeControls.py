@@ -1,7 +1,12 @@
 from UIClasses import *
 from pedalboard.io import AudioStream
+from AudioHandler import AudioHandler
 
 # used by main.app 
+
+def makeAudioStream(app):
+    app.audio = AudioHandler(app.inputDevice, app.outputDevice, bufferSize=256)
+
 #                  -----------------------------
 #                           I/O screen
 def createIOButtons(app, IOList, direction):
@@ -31,6 +36,18 @@ def makeIOSetterFunction(i, direction):
             app.IOButtons = [ ]
     return f
 #                  -----------------------------------
+#                        idiot check screen    
+def getIdiotCheckYesNoFunction(yesNo):
+    if yesNo == 'yes':
+        def yes(app):
+            makeAudioStream(app)
+            setActiveScreen('mainScreen')
+        return yes
+    if yesNo == 'no':
+        def no(app):
+            setActiveScreen('inputsScreen')
+        return no
+#                  -----------------------------------
 #                           main screen
 
 def makeControlFunction(type):
@@ -38,8 +55,6 @@ def makeControlFunction(type):
     # one big ass function to group a bunch of stuff together really
     #                        *buttons*
     def switchToInputsScreen(app):
-        # reset the app object's I/O
-        app.inputDevice, app.outputDevice = None, None
         # stop app.audio @TODO
         del app.audio           #@TODO HOW THE FUCK DO I DO THIS
         setActiveScreen('inputsScreen')

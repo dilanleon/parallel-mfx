@@ -1,4 +1,3 @@
-from AudioHandler import AudioHandler
 from UIClasses import *
 from cmu_graphics import *
 from makeControls import *
@@ -24,7 +23,7 @@ http://www.echothief.com/
 ############################# CMU_GRAPHICS APP ################################
 ###############################################################################
 
-#               ---------- general api calls ----------
+#            ---------- general api calls and helpers ----------
 def onAppStart(app):
     app.baseWindowSize = 500
     app.windowSize = 500 # app.windowSize == app.height, exists for clarity
@@ -42,13 +41,14 @@ def forceResizeTo3By4(app):
         # always maintaining the height
         app.width, app.height = int(app.windowSize*3/4), app.windowSize
 
-
 ########################## SET INPUTS SCREEN ############################
 
 # here lie the remains of the stuff now in makeControls.py
 
 def inputsScreen_onScreenActivate(app):
     app.IOButtons = [ ]
+    app.inputDevice = None
+    app.outputDevice = None
     createIOButtons(app, AudioStream.input_device_names, 'input')
 
 def inputsScreen_redrawAll(app):
@@ -66,13 +66,43 @@ def inputsScreen_redrawAll(app):
             )
         for button in app.IOButtons: button.draw(app)
 
+def inputsScreen_onMouseMove(app, mX, mY):
+    for button in app.IOButtons:
+        button.mouseMove(mX, mY, app)
+
 def inputsScreen_onMousePress(app, mX, mY):
     for button in app.IOButtons:
         button.checkIfPressed(mX, mY, app)
     if app.inputDevice != None and app.outputDevice != None:
-        app.audio = AudioHandler(app.inputDevice, app.outputDevice, 
-                                 bufferSize=256)
+        if (app.inputDevice == 'MacBook Pro Microphone' and
+            app.outputDevice == 'MacBook Pro Speakers'):
+            setActiveScreen('idiotCheckScreen')
+            return
+        makeAudioStream(app)
         setActiveScreen('mainScreen')
+
+######################### IDIOT CHECK SCREEN ###########################
+# because I made this mistake too many times
+def idiotCheckScreen_onScreenActivate(app):
+    app.idiotCheckScreenButtons = [
+        Button('NO', 125, 250, 70, 35, getIdiotCheckYesNoFunction('no')),
+        Button('YES', 250, 250, 70, 35, getIdiotCheckYesNoFunction('yes'))
+    ]
+
+def idiotCheckScreen_redrawAll(app):
+    drawLabel('Are you sure?', app.width/2, app.height/9, size=app.height/22)
+    drawLabel('This will cause feedback!', app.width/2, app.height/5, 
+              fill='red', font='impact', size=app.height/22)
+    for button in app.idiotCheckScreenButtons:
+        button.draw(app)
+
+def idiotCheckScreen_onMouseMove(app, mX, mY):
+    for button in app.idiotCheckScreenButtons:
+        button.mouseMove(mX, mY, app)
+
+def idiotCheckScreen_onMousePress(app, mX, mY):
+    for button in app.idiotCheckScreenButtons:
+        button.checkIfPressed(mX, mY, app)
 
 ############################# MAIN SCREEN ##############################
 
@@ -99,7 +129,7 @@ def mainScreen_onMousePress(app, mX, mY):
 
 def mainScreen_onMouseMove(app, mX, mY):
     for button in app.activeButtons:
-        button.mouseMove(mX, mY)
+        button.mouseMove(mX, mY, app)
 
 def mainScreen_onMouseDrag(app, mX, mY):
     for knob in app.activeKnobs:

@@ -34,7 +34,7 @@ class Button:
         if labelSize == None:
             self.labelSize = min(self.width/len(self.labelText)+3, self.height)
 
-    def isMouseInside(self, mX, mY):
+    def isMouseInside(self, mX, mY, app):
         # checks if the mouse is inside the Button's Bounding Box (BBB)
         scaledX, scaledY, scaledWidth, scaledHeight = self.getScaledXYWH(app)
         return (scaledX - (scaledWidth/2) < mX < scaledX + (scaledWidth/2) and
@@ -42,15 +42,15 @@ class Button:
     
     def checkIfPressed(self, mX, mY, app):
         # If the button is pressed, call its assigned function:
-        if self.isMouseInside(mX, mY):
+        if self.isMouseInside(mX, mY, app):
             self.function(app)
             # if it's toggleable, toggle it:
             if self.drawAsToggled:
                 self.toggled = not self.toggled
     
-    def mouseMove(self, mX, mY):
+    def mouseMove(self, mX, mY, app):
         # 1/2 of the hovering effect:
-        if self.isMouseInside(mX, mY):
+        if self.isMouseInside(mX, mY, app):
             self.hovered = True
         else:
             self.hovered = False
