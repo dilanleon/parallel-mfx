@@ -1,12 +1,13 @@
+# used by main.app to create button and knob controls
 from UIClasses import *
 from pedalboard.io import AudioStream
 from AudioHandler import AudioHandler
 
-# used by main.app 
-
-def makeAudioStream(app):
-    app.audio = AudioHandler(app.inputDevice, app.outputDevice, bufferSize=256)
-
+#                  -----------------------------
+#                          many screens
+def makeAudioStream(app, sampleRate, bufferSize):
+    app.audio = AudioHandler(app.inputDevice, app.outputDevice, 
+                             bufferSize=bufferSize, sampleRate=sampleRate)
 #                  -----------------------------
 #                           I/O screen
 def createIOButtons(app, IOList, direction):
@@ -40,7 +41,7 @@ def makeIOSetterFunction(i, direction):
 def getIdiotCheckYesNoFunction(yesNo):
     if yesNo == 'yes':
         def yes(app):
-            makeAudioStream(app)
+            makeAudioStream(app, app.sampleRate, app.bufferSize)
             setActiveScreen('mainScreen')
         return yes
     if yesNo == 'no':
@@ -261,8 +262,8 @@ def makeControlObjects(app):
                makeControlFunction('convolution'), drawAsToggled=True),
         # mute dry
         Button('M', 315, 420, 10, 10, makeControlFunction('muteDry'),
-               drawAsToggled=True, color='yellow', font='arial'),
+               drawAsToggled=True, color='yellow', font='arial', labelSize=8),
         # mute wet
         Button('M', 355, 420, 10, 10, makeControlFunction('muteWet'),
-               drawAsToggled=True, color='yellow', font='arial')
+               drawAsToggled=True, color='yellow', font='arial', labelSize=8)
     ]

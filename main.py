@@ -41,6 +41,16 @@ def forceResizeTo3By4(app):
         # always maintaining the height
         app.width, app.height = int(app.windowSize*3/4), app.windowSize
 
+##################### SAMPLE RATE/BUFFER SIZE SCREEN ####################
+
+def sampleRateBufferSize_onScreenActivate(app):     #@TODO
+    app.sampleRate = 44100
+    app.bufferSize = 512
+    setActiveScreen('inputsScreen')
+
+def sampleRateBufferSize_redrawAll(app):
+    pass
+
 ########################## SET INPUTS SCREEN ############################
 
 # here lie the remains of the stuff now in makeControls.py
@@ -79,7 +89,7 @@ def inputsScreen_onMousePress(app, mX, mY):
             app.outputDevice == 'MacBook Pro Speakers'):
             setActiveScreen('idiotCheckScreen')
             return
-        makeAudioStream(app)
+        makeAudioStream(app, app.sampleRate, app.bufferSize)
         setActiveScreen('mainScreen')
 
 ######################### IDIOT CHECK SCREEN ###########################
@@ -156,6 +166,6 @@ def mainScreen_onStep(app):
 
 ################################# MAIN() ################################
 def main():
-    runAppWithScreens('inputsScreen')
+    runAppWithScreens('sampleRateBufferSize')
 
 main()

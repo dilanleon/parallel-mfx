@@ -33,6 +33,8 @@ class Button:
             self.toggled = False
         if labelSize == None:
             self.labelSize = min(self.width/len(self.labelText)+3, self.height)
+        else:
+            self.labelSize = labelSize
 
     def isMouseInside(self, mX, mY, app):
         # checks if the mouse is inside the Button's Bounding Box (BBB)
@@ -219,6 +221,7 @@ class Knob:
                       fill=self.labelColor)
 
     def mouseInKnob(self, mX, mY, app):
+        # check if distance between knob center and mX, mY < radius
         x, y, r = self.getScaledXYRad(app)
         return ((x - mX)**2 + (y - mY)**2)**0.5 < r
 
@@ -226,7 +229,7 @@ class Knob:
         if self.mouseInKnob(mX, mY, app):
             self.mouseHold = True
             self.lastY = mY
-            if self.recentClick:    # check for double click and reset
+            if self.recentClick: # check for double click and reset
                 self.resetPosition()
                 self.function(app, self.val)
             self.recentClick = True # gets set to false by self.stepTimer

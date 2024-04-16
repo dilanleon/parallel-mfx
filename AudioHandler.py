@@ -18,12 +18,11 @@ class AudioHandler:
                                   sample_rate=sampleRate,
                                   plugins=defaultPlugins,
                                   allow_feedback=True)
-        # maybe turn allow_feedback off?
         self.audioThread = Thread(target=self.stream.run, daemon=True)
         self.audioThread.start()
         self.dryGain, self.wetGain = 0.0, 0.0       # not stored in pluginParams
-        self.dryMute, self.wetMute = False, False   # same
-        MakeupGain = Gain       # So it has a different name
+        self.dryMute, self.wetMute = False, False   # not stored in pluginParams
+        MakeupGain = Gain       # So it has a different name @TODO
         # The below dictionary will be called for plugin constructors as kwargs
         self.pluginParams = { 
             LadderFilter:{
@@ -72,22 +71,37 @@ class AudioHandler:
                             MakeupGain, Clipping, Distortion, Reverb, 
                             Convolution, Gain)
 
-    def changeDryGain(self, newGain):
+    def changeDryGain(self, newGain, unmute=False):
         # Gain is always last
-        self.stream.plugins[0][-1].gain_db = float(newGain)
-        # this property needed for plugin toggling which overwrites
-        # its value in self.stream.plugins
-        self.dryGain = newGain
+        # if trying to change param while muted, don't actually change it:
+        if self.dryMute and not unmute:
+            self.prevDryGain = newGain
+        # elif trying to unmute, set gain equal to remembered gain:
+        elif self.dryMute and unmute:
+            self.stream.plugins[0][-1].gain_db = float(newGain)
+            self.dryGain = self.prevDryGain
+        # else, change value as normal:
+        else:
+            self.stream.plugins[0][-1].gain_db = float(newGain)
+            self.dryGain = newGain
+            # we need to re-make the plugin on each param change
     
-    def changeWetGain(self, newGain):
+    def changeWetGain(self, newGain, unmute=False):
         # Gain is always last within the wet chain
-        self.stream.plugins[0][0][-1].gain_db = float(newGain)
-        # stream.plugins gets overwritten on each param change
-        self.wetGain = newGain
+        # Same idea as self.changeDryGain()
+        if self.wetMute and not unmute:
+            self.prevWetGain = newGain
+        elif self.dryMute and unmute:
+            self.stream.plugins[0][0][-1].gain_db = float(newGain)
+            self.wetGain = self.prevWetGain
+        else:
+            self.stream.plugins[0][0][-1].gain_db = float(newGain)
+            self.wetGain = newGain
+            # stream.plugins gets overwritten on each param change
     
     def toggleDryMute(self):
         if self.dryMute:
-            self.changeDryGain(self.prevDryGain)
+            self.changeDryGain(self.prevDryGain, unmute=True)
         else:
             self.prevDryGain = self.dryGain     # don't forget what it was!
             self.changeDryGain(-999)
@@ -96,7 +110,7 @@ class AudioHandler:
     
     def toggleWetMute(self):
         if self.wetMute:
-            self.changeWetGain(self.prevWetGain)
+            self.changeWetGain(self.prevWetGain, unmute=True)
         else:
             self.prevWetGain = self.wetGain     # rerember the value!
             self.changeWetGain(-999)
