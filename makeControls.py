@@ -1,5 +1,12 @@
 # used by main.app to create button and knob controls
+
+# THERE ARE MANY MAGIC NUMBERS IN THIS FILE. They are arbitrary and subjective
+# as they are used for the positioning of elements in the UI, so it's best
+# that they are easy to tweak. Button and Knob objects scale automatically,
+# so their x and y positions and other such params are fixed values.
+
 from UIClasses import *
+from pedalboard import LadderFilter
 from pedalboard.io import AudioStream
 from AudioHandler import AudioHandler
 
@@ -9,14 +16,81 @@ def makeAudioStream(app, sampleRate, bufferSize):
     app.audio = AudioHandler(app.inputDevice, app.outputDevice, 
                              bufferSize=bufferSize, sampleRate=sampleRate)
 #                  -----------------------------
+#                  sample rate/buffer size select
+def makeSampleAndBufferFunctions(type):
+    # sample rate settings
+    def sampleRate44k(app):
+        app.sampleRate = 44100
+    def sampleRate48k(app):
+        app.sampleRate = 48000
+    # higher sample rates than 48k are dumb. but go ahead, user, be dumb.
+    def sampleRate88k(app):
+        app.sampleRate = 88200
+    def sampleRate96k(app):
+        app.sampleRate = 96000
+    def sampleRate176k(app):
+        app.sampleRate = 176400
+    def sampleRate192k(app):
+        app.sampleRate = 192000
+    # buffer size settings
+    def buffer64(app):
+        app.bufferSize = 64
+    def buffer128(app):
+        app.bufferSize = 128
+    def buffer256(app):
+        app.bufferSize = 256
+    def buffer512(app):
+        app.bufferSize = 512
+    def buffer1024(app):
+        app.bufferSize = 1024
+    def buffer2048(app):
+        app.bufferSize = 2048
+    functionDict = {
+        # sample rates
+        '44.1k':sampleRate44k,
+        '48k':sampleRate48k,
+        '88.2k':sampleRate88k,
+        '96k':sampleRate96k,
+        '176.4k':sampleRate176k,
+        '192k':sampleRate192k,
+        # buffers
+        '64':buffer64,
+        '128':buffer128,
+        '256':buffer256,
+        '512':buffer512,
+        '1024':buffer1024,
+        '2048':buffer2048
+    }
+    return functionDict[type]
+
+def makeSampleAndBufferButtons(app):
+    app.sampleRateButtons = [ ]
+    app.bufferSizeButtons = [ ]
+    # loop through the below list and make buttons with those labels/fns
+    sampleRates = ['44.1k', '48k', '88.2k', '96k', '176.4k', '192k']
+    for i in range(len(sampleRates)):
+        sampleRate = sampleRates[i]
+        app.sampleRateButtons.append(
+            Button(sampleRate, 187.5, 100+i*33.3, 187.5, 31.25,
+                   makeSampleAndBufferFunctions(sampleRate))
+        )
+    # same thing but for buffer sizes
+    bufferSizes = ['64', '128', '256', '512', '1024', '2048']
+    for i in range(len(bufferSizes)):
+        bufferSize = bufferSizes[i]
+        app.bufferSizeButtons.append(
+            Button(bufferSize, 187.5, 100+i*33.3, 187.5, 31.25, 
+                   makeSampleAndBufferFunctions(bufferSize))
+        )
+#                  -----------------------------
 #                           I/O screen
-def createIOButtons(app, IOList, direction):
+def makeIOButtons(app, IOList, direction):
     # makes the buttons to select input
     for i in range(len(IOList)):
-        getInputName = makeIOSetterFunction(i, direction)
+        setInputName = makeIOSetterFunction(i, direction)
         app.IOButtons.append(
             Button(
-                IOList[i], 187.5, 100+i*33.3, 187.5, 31.25, getInputName, 
+                IOList[i], 187.5, 100+i*33.3, 187.5, 31.25, setInputName, 
                 color='antiqueWhite', labelColor='darkSlateGray', font='arial', 
                 boldText=True
                 )
@@ -30,7 +104,7 @@ def makeIOSetterFunction(i, direction):
         def f(app):
             app.inputDevice = AudioStream.input_device_names[i]
             app.IOButtons = [ ]
-            createIOButtons(app, AudioStream.output_device_names, 'output')
+            makeIOButtons(app, AudioStream.output_device_names, 'output')
     elif direction == 'output':
         def f(app):
             app.outputDevice = AudioStream.output_device_names[i]
@@ -38,7 +112,7 @@ def makeIOSetterFunction(i, direction):
     return f
 #                  -----------------------------------
 #                        idiot check screen    
-def getIdiotCheckYesNoFunction(yesNo):
+def makeIdiotCheckYesNoFunction(yesNo):
     if yesNo == 'yes':
         def yes(app):
             makeAudioStream(app, app.sampleRate, app.bufferSize)
@@ -48,6 +122,12 @@ def getIdiotCheckYesNoFunction(yesNo):
         def no(app):
             setActiveScreen('inputsScreen')
         return no
+
+def makeIdiotCheckButtons(app):
+    app.idiotCheckScreenButtons = [
+        Button('NO', 125, 250, 70, 35, makeIdiotCheckYesNoFunction('no')),
+        Button('YES', 250, 250, 70, 35, makeIdiotCheckYesNoFunction('yes'))
+    ]
 #                  -----------------------------------
 #                           main screen
 
@@ -60,6 +140,18 @@ def makeControlFunction(type):
         setActiveScreen('inputsScreen')
     def filterToggle(app):
         app.audio.togglePlugin('Filter')
+    def setFilterTypeLPF12(app):
+        app.audio.changePluginParam('Filter', 'mode', LadderFilter.LPF12)
+    def setFilterTypeHPF12(app):
+        app.audio.changePluginParam('Filter', 'mode', LadderFilter.HPF12)
+    def setFilterTypeBPF12(app):
+        app.audio.changePluginParam('Filter', 'mode', LadderFilter.BPF12)
+    def setFilterTypeLPF24(app):
+        app.audio.changePluginParam('Filter', 'mode', LadderFilter.LPF24)
+    def setFilterTypeHPF24(app):
+        app.audio.changePluginParam('Filter', 'mode', LadderFilter.HPF24)
+    def setFilterTypeBPF24(app):
+        app.audio.changePluginParam('Filter', 'mode', LadderFilter.BPF24)
     def invertToggle(app):
         app.audio.togglePlugin('Invert')
     def gateToggle(app):
@@ -125,51 +217,58 @@ def makeControlFunction(type):
     #     put the functions in a dictionary and return the desired one
     functionDict = {        # holy fucking fuck
         'filter':filterToggle,
+        'filterLPF12':setFilterTypeLPF12,               # really
+        'filterHPF12':setFilterTypeHPF12,
+        'filterBPF12':setFilterTypeBPF12,
+        'filterLPF24':setFilterTypeLPF24,
+        'filterHPF24':setFilterTypeHPF24,
+        'filterBPF24':setFilterTypeBPF24,               # insanely
         'filterFreq':changeFilterFrequency,
         'filterResonance':changeFilterResonance,
         'filterDrive':changeFilterDrive,
         'invert':invertToggle,
-        'gate':gateToggle,
+        'gate':gateToggle,                              # long
         'gateThresh':changeGateThreshold,
         'gateRatio':changeGateRatio,
         'gateAttack':changeGateAttack,
         'gateRelease':changeGateRelease,
-        'comp':compToggle,
+        'comp':compToggle,                              # fuckin
         'compThresh':changeCompThreshold,
         'compRatio':changeCompRatio,
         'compAttack':changeCompAttack,
         'compRelease':changeCompRelease,
-        'clipper':clipToggle,
+        'clipper':clipToggle,                           # ass
         'clipThresh':changeClippingThreshold,
         'distortion':distortionToggle,
         'distGain':changeDistortionGain,
         'reverb':reverbToggle,
         'reverbSize':changeReverbSize,
-        'reverbDamping':changeReverbDamping,
+        'reverbDamping':changeReverbDamping,            # dictionary
         'reverbDryWet':changeReverbDryWet,
         'reverbWidth':changeReverbWidth,
         'convolution':convolutionToggle,
         'convolutionMix':changeConvolutionMix,
-        'switchToInputsScreen':switchToInputsScreen,
+        'switchToInputsScreen':switchToInputsScreen,    # lol
         'gainWet':gainWet,
         'gainDry':gainDry,
         'muteDry':muteDry,
-        'muteWet':muteWet
+        'muteWet':muteWet                               # its over now
         }
     return functionDict[type]
 
 def makeControlObjects(app):
     # knobs and buttons separate for your (my) calling convenience!
+    # creates all the control objects required by the app.
     app.activeKnobs = [
         # filter freq
-        Knob(155, 30, 17, 20, 20000, 175, makeControlFunction('filterFreq'),
+        Knob(200, 30, 17, 20, 20000, 175, makeControlFunction('filterFreq'),
              curveFunction='exponential', label='freq', color='gold'),
         # filter resonance
-        Knob(200, 30, 17, 0, 1, 0, makeControlFunction('filterResonance'),
+        Knob(245, 30, 17, 0, 1, 0, makeControlFunction('filterResonance'),
              curveFunction='linear', label='reso', color='gold',
              percentKnob=True),
         # filter drive
-        Knob(245, 30, 17, 1, 30, 1, makeControlFunction('filterDrive'),
+        Knob(290, 30, 17, 1, 30, 1, makeControlFunction('filterDrive'),
              curveFunction='linear', label='drive', color='gold'),
         # gate threshold
         Knob(155, 130, 17, -60, 0, -60, makeControlFunction('gateThresh'),

@@ -103,12 +103,12 @@ class Knob:
         self.accentColor = accentColor
         self.labelColor = labelColor
         self.borderWidth = borderWidth
-        self.percentKnob = percentKnob # bool -> self.val represents a percent
         self.alwaysShowVal=alwaysShowVal
+        self.percentKnob = percentKnob # does self.val represent a percent?
         self.mouseHold = False         # is this knob being modified?
         self.lastY = None              # by how much? (Y - lastY)
         self.recentClick = False       # was the button recently clicked?
-        self.timer = 0          # to check if a knob has been double clicked
+        self.timer = 0          # how long ago? resets recentClick over 200ms
         self.sensitivity = 8    # multiplier for deltaY in knob drag
     
     def resetPosition(self):

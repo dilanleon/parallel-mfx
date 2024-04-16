@@ -27,6 +27,7 @@ def onAppStart(app):
     app.baseWindowSize = 500
     app.windowSize = 500 # app.windowSize == app.height, exists for clarity
     app.width, app.height = int(app.windowSize*(3/4)), app.windowSize
+    app.backgroundColor = 'dimGray'
     app.inputDevice = None
     app.outputDevice = None
 
@@ -43,12 +44,35 @@ def forceResizeTo3By4(app):
 ##################### SAMPLE RATE/BUFFER SIZE SCREEN ####################
 
 def sampleRateBufferSize_onScreenActivate(app):     # @TODO
-    app.sampleRate = 44100
-    app.bufferSize = 512
-    setActiveScreen('inputsScreen')
+    app.sampleRate, app.bufferSize = None, None
+    makeSampleAndBufferButtons(app)
 
 def sampleRateBufferSize_redrawAll(app):
-    pass
+    drawRect(0, 0, app.width, app.height, fill=app.backgroundColor)
+    if app.sampleRate == None:
+        drawLabel('Select a sample rate:', app.width/2, app.height/9, 
+                  size=app.height/20)
+        for button in app.sampleRateButtons: button.draw(app)
+    else:
+        drawLabel('Select a buffer size:', app.width/2, app.height/9, 
+                  size=app.height/20)
+        for button in app.bufferSizeButtons: button.draw(app)
+
+def sampleRateBufferSize_onMouseMove(app, mX, mY):
+    for button in app.sampleRateButtons + app.bufferSizeButtons:
+        # check for hover:
+        button.mouseMove(mX, mY, app)
+
+def sampleRateBufferSize_onMousePress(app, mX, mY):
+    # these need to be separate or they will both get pressed at the same time
+    if app.sampleRate == None:
+        for button in app.sampleRateButtons:
+            button.checkIfPressed(mX, mY, app)
+    else:
+        for button in app.bufferSizeButtons:
+            button.checkIfPressed(mX, mY, app)
+    if app.sampleRate != None and app.bufferSize != None:
+        setActiveScreen('inputsScreen')
 
 ########################## SET INPUTS SCREEN ############################
 
@@ -58,10 +82,10 @@ def inputsScreen_onScreenActivate(app):
     app.IOButtons = [ ]
     app.inputDevice = None
     app.outputDevice = None
-    createIOButtons(app, AudioStream.input_device_names, 'input')
+    makeIOButtons(app, AudioStream.input_device_names, 'input')
 
 def inputsScreen_redrawAll(app):
-    drawRect(0, 0, app.width, app.height, fill='slateGray')
+    drawRect(0, 0, app.width, app.height, fill=app.backgroundColor)
     if app.inputDevice == None:
         drawLabel(
             'Please select an input device.', app.width/2, app.height/9,
@@ -94,14 +118,12 @@ def inputsScreen_onMousePress(app, mX, mY):
 ######################### IDIOT CHECK SCREEN ###########################
 # because I made this mistake too many times
 def idiotCheckScreen_onScreenActivate(app):
-    app.idiotCheckScreenButtons = [
-        Button('NO', 125, 250, 70, 35, getIdiotCheckYesNoFunction('no')),
-        Button('YES', 250, 250, 70, 35, getIdiotCheckYesNoFunction('yes'))
-    ]
+    makeIdiotCheckButtons(app)
 
 def idiotCheckScreen_redrawAll(app):
+    drawRect(0, 0, app.width, app.height, fill=app.backgroundColor)
     drawLabel('Are you sure?', app.width/2, app.height/9, size=app.height/22)
-    drawLabel('YOU FUCKING MORON', app.width/2, app.height/5.5, 
+    drawLabel('YOU FUCKING MORON', app.width/2, app.height/5.5,  # jest
               fill='crimson', font='impact', size=app.height/22)
     drawLabel('This will cause feedback!', app.width/2, app.height/4, 
               fill='red', font='impact', size=app.height/22)
@@ -124,20 +146,17 @@ def mainScreen_onScreenActivate(app):
     makeControlObjects(app)
 
 def mainScreen_redrawAll(app):
+    drawRect(0, 0, app.width, app.height, fill=app.backgroundColor)
     sizeConstant = app.height/app.baseWindowSize
-    drawRect(0, app.height*19/20, app.width, app.height/20, fill='dimGray')
+    drawRect(0, app.height*19/20, app.width, app.height/20, fill='slateGray')
     drawLabel('PBPP-112', app.width/12, app.height*19.5/20, font='impact',
               size=14*sizeConstant, italic=True, fill='ghostWhite')
-    for button in app.activeButtons:
-        button.draw(app)
-    for knob in app.activeKnobs:
-        knob.draw(app)
+    for control in app.activeButtons + app.activeKnobs:
+        control.draw(app)
 
 def mainScreen_onMousePress(app, mX, mY):
-    for button in app.activeButtons:
-        button.checkIfPressed(mX, mY, app)
-    for knob in app.activeKnobs:
-        knob.checkIfPressed(mX, mY, app)
+    for control in app.activeButtons + app.activeKnobs:
+        control.checkIfPressed(mX, mY, app)
 
 def mainScreen_onMouseMove(app, mX, mY):
     for button in app.activeButtons:

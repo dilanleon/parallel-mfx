@@ -16,10 +16,12 @@ Ambiances by EchoThief: http://www.echothief.com/
 Displays a toggleable list of effects, dry/wet mutes, and effect parameters that update in realtime
 
 TO DO in (more or less) order:
-- Compressor Makeup Gain
 - Make it look not like shit
-- Convolution select
 - User selectable buffer size/sample rate on launch
+- Finish adding other filter modes
+- Convolution select
+- Compressor Makeup Gain
+- LFOs capable of targeting any knob
 - 'Switch' class capable of toggling between two plugins for a given spot in the signal chain
 - Figure out how to access the data within the AudioStream
 - VU meters?? Maybe impossible maybe very easy?? Haven't experimented
