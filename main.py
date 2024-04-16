@@ -15,7 +15,6 @@ https://spotify.github.io/pedalboard/index.html
 
 Ambiances by EchoThief:
 http://www.echothief.com/
-
 '''
 
 
@@ -43,7 +42,7 @@ def forceResizeTo3By4(app):
 
 ##################### SAMPLE RATE/BUFFER SIZE SCREEN ####################
 
-def sampleRateBufferSize_onScreenActivate(app):     #@TODO
+def sampleRateBufferSize_onScreenActivate(app):     # @TODO
     app.sampleRate = 44100
     app.bufferSize = 512
     setActiveScreen('inputsScreen')
@@ -102,7 +101,9 @@ def idiotCheckScreen_onScreenActivate(app):
 
 def idiotCheckScreen_redrawAll(app):
     drawLabel('Are you sure?', app.width/2, app.height/9, size=app.height/22)
-    drawLabel('This will cause feedback!', app.width/2, app.height/5, 
+    drawLabel('YOU FUCKING MORON', app.width/2, app.height/5.5, 
+              fill='crimson', font='impact', size=app.height/22)
+    drawLabel('This will cause feedback!', app.width/2, app.height/4, 
               fill='red', font='impact', size=app.height/22)
     for button in app.idiotCheckScreenButtons:
         button.draw(app)

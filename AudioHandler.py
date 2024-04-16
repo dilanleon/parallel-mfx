@@ -18,8 +18,9 @@ class AudioHandler:
                                   sample_rate=sampleRate,
                                   plugins=defaultPlugins,
                                   allow_feedback=True)
-        self.audioThread = Thread(target=self.stream.run, daemon=True)
-        self.audioThread.start()
+        # self.audioThread = Thread(target=self.stream.run, daemon=True)
+        # self.audioThread.start()
+        self.stream.__enter__()
         self.dryGain, self.wetGain = 0.0, 0.0       # not stored in pluginParams
         self.dryMute, self.wetMute = False, False   # not stored in pluginParams
         MakeupGain = Gain       # So it has a different name @TODO
@@ -222,4 +223,4 @@ class AudioHandler:
             self.updateChain(chainAsList)
 
     def killStream(self):
-            del self.runStream
+        del self.stream

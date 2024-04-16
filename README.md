@@ -16,7 +16,6 @@ Ambiances by EchoThief: http://www.echothief.com/
 Displays a toggleable list of effects, dry/wet mutes, and effect parameters that update in realtime
 
 TO DO in (more or less) order:
-- Fix killing of audioThread BUT HOWWWWW
 - Compressor Makeup Gain
 - Make it look not like shit
 - Convolution select

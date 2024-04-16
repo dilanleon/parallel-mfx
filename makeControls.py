@@ -56,8 +56,7 @@ def makeControlFunction(type):
     # one big ass function to group a bunch of stuff together really
     #                        *buttons*
     def switchToInputsScreen(app):
-        # stop app.audio @TODO
-        del app.audio           #@TODO HOW THE FUCK DO I DO THIS
+        app.audio.killStream()
         setActiveScreen('inputsScreen')
     def filterToggle(app):
         app.audio.togglePlugin('Filter')
