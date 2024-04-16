@@ -68,6 +68,7 @@ def inputsScreen_redrawAll(app):
 
 def inputsScreen_onMouseMove(app, mX, mY):
     for button in app.IOButtons:
+        # check if the button is hovered:
         button.mouseMove(mX, mY, app)
 
 def inputsScreen_onMousePress(app, mX, mY):

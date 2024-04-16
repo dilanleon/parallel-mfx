@@ -15,9 +15,9 @@ def createIOButtons(app, IOList, direction):
         getInputName = makeIOSetterFunction(i, direction)
         app.IOButtons.append(
             Button(
-                IOList[i], app.width/2, app.height/5+i*app.height/15, 
-                app.width/2, app.height/16, getInputName, color='antiqueWhite', 
-                labelColor='darkSlateGray', font='arial', boldText=True
+                IOList[i], 187.5, 100+i*33.3, 187.5, 31.25, getInputName, 
+                color='antiqueWhite', labelColor='darkSlateGray', font='arial', 
+                boldText=True
                 )
             )
 
