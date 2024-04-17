@@ -16,16 +16,11 @@ Ambiances by EchoThief: http://www.echothief.com/
 Displays a toggleable list of effects, dry/wet mutes, and effect parameters that update in realtime
 
 TO DO in (more or less) order:
-- Make it look not like shit
-- Add bitcrush, delay, chorus
-- Finish adding other filter modes
+- Add bitcrush, delay, chorus (should be EZPZ)
 - Convolution select
+- Finish adding other filter modes
 - Compressor Makeup Gain
 - LFOs capable of targeting any knob
-- 'Switch' class capable of toggling between two plugins for a given spot in the signal chain
 - Figure out how to access the data within the AudioStream
 - VU meters?? Maybe impossible maybe very easy?? Haven't experimented
-- Drop down menus (i.e. for IR select, filter select)
 - Verify functionality on Windows/Linux
-- Figure out VST/AAX support? might be a pipe dream (probably)
-- Super duper pretty-fication (like a Universal Audio plugin)

@@ -265,7 +265,7 @@ def makeControlObjects(app):
         Knob(77, 55, 25, 20, 20000, 200, makeControlFunction('filterFreq'),
              curveFunction='exponential', label='freq', color=app.filterColor),
         # filter resonance
-        Knob(135, 70, 13, 0, 1, 0, makeControlFunction('filterResonance'),
+        Knob(125, 70, 13, 0, 1, 0, makeControlFunction('filterResonance'),
              curveFunction='linear', label='reso', color=app.filterColor,
              percentKnob=True),
         # filter drive
@@ -285,7 +285,7 @@ def makeControlObjects(app):
             curveFunction='exponential', label='release', color=app.gateColor),
         # compressor threshold
         Knob(30, 262.5, 17, -60, 0, 0, makeControlFunction('compThresh'),
-             curveFunction='logarithmic', label='thresh', color=app.compColor),
+             curveFunction='logarithmic', label='dBthresh', color=app.compColor),
         # compressor ratio
         Knob(70, 232.5, 17, 1, 20, 1, makeControlFunction('compRatio'), 
              curveFunction='linear', label='ratio', color=app.compColor),
@@ -297,29 +297,29 @@ def makeControlObjects(app):
              curveFunction='exponential', label='release', color=app.compColor),
         #clipping threshold
         Knob(50, 350, 22, -24, 0, 0, makeControlFunction('clipThresh'),
-             curveFunction='logarithmic', label='thresh', color=app.distColor),
+             curveFunction='logarithmic', label='dBthresh', color=app.distColor),
         # distortion gain
         Knob(130, 350, 22, 0, 30, 0, makeControlFunction('distGain'), 
-             curveFunction='linear', label='gain', color=app.distColor),
+             curveFunction='linear', label='dBgain', color=app.distColor),
         # reverb size
         Knob(217.5, 262.5, 17, 0, 1, 0.5, makeControlFunction('reverbSize'),
              curveFunction='linear', label='size', color=app.reverbColor,
              percentKnob=True),
         # reverb damping
         Knob(257.5, 232.5, 17, 0, 1, 0.5, makeControlFunction('reverbDamping'),
-             curveFunction='linear', label='damping', color=app.reverbColor,
+             curveFunction='linear', label='length', color=app.reverbColor,
              percentKnob=True),
         # reverb dry/wet
         Knob(297.5, 262.5, 17, 0, 1, 0.5, makeControlFunction('reverbDryWet'),
              curveFunction='linear', label='dry/wet', color=app.reverbColor,
              percentKnob=True),
         # reverb width
-        Knob(327.5, 232.5, 17, 0, 1, 0.5, makeControlFunction('reverbWidth'),
+        Knob(337.5, 232.5, 17, 0, 1, 0.5, makeControlFunction('reverbWidth'),
              curveFunction='linear', label='width', color=app.reverbColor,
              percentKnob=True),
         # convolution mix
         Knob(281.25, 345, 25, 0, 1, 0.5, makeControlFunction('convolutionMix'),
-             curveFunction='linear', label='mix', color=app.convolutionColor,
+             curveFunction='linear', label='dry/wet', color=app.convolutionColor,
              percentKnob=True),
         # dry gain
         Knob(250, 435, 22, -60, 6, 0, makeControlFunction('gainDry'),
@@ -329,7 +329,7 @@ def makeControlObjects(app):
         Knob(312.5, 435, 22, -60, 6, 0, makeControlFunction('gainWet'), 
             curveFunction='logarithmic', color='darkRed', label='dBwet')
     ]
-    ON_SYMBOL = 'Ѳ'
+    ON_SYMBOL = 'O'         # Ѳ
     app.activeButtons = [
         # goto edit I/O screen
         Button('Edit I/O', 350, 487.5, 44, 12.5, 
@@ -363,11 +363,11 @@ def makeControlObjects(app):
                makeControlFunction('convolution'), drawAsToggled=True,
                color=app.convolutionColor),
         # mute dry
-        Button('M', 220, 420, 10, 10, makeControlFunction('muteDry'),
+        Button('M', 220, 420, 15, 15, makeControlFunction('muteDry'),
                drawAsToggled=True, color='yellow', font='arial', 
                labelSize=8, border=None),
         # mute wet
-        Button('M', 285, 420, 10, 10, makeControlFunction('muteWet'),
+        Button('M', 282.5, 420, 15, 15, makeControlFunction('muteWet'),
                drawAsToggled=True, color='yellow', font='arial', 
                labelSize=8, border=None)
     ]

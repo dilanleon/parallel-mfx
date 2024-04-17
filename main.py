@@ -157,7 +157,7 @@ def mainScreen_drawPrettyStuff(app):
     # where everything that makes stuff look better but does nothing else goes
     realWindowHeight = app.height*19.5/20
     textSize = app.height/28
-    textOffset = app.height/40
+    textOffset = app.height/50
     drawLine(app.width/2, 0, app.width/2, app.height)
     for i in range(1, 5):
         lineHeight = (realWindowHeight/5)*i
@@ -174,10 +174,10 @@ def mainScreen_drawPrettyStuff(app):
     drawLabel('R   e   V   E   R   B', app.width/2 + app.width/45, 
               realWindowHeight*2/5 + textOffset, font='arial',
               fill=app.reverbColor, align='left', size=textSize)
-    drawLabel('C   o   N   V   O   L   V', app.width/2 + app.width/45,
+    drawLabel('C   O   N   V   o   L   V', app.width/2 + app.width/45,
               realWindowHeight*3/5 + textOffset, font='arial',
               fill=app.convolutionColor, align='left', size=textSize)
-    drawLabel('M   A   s   T   E   R', app.width/2 + app.width/45,
+    drawLabel('M   A   S   T   E   r', app.width/2 + app.width/45,
               realWindowHeight*4/5 + textOffset, font='arial',
               fill='black', align='left', size=textSize)
 
