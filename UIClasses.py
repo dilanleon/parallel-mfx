@@ -12,7 +12,7 @@ class Button:
     
     def __init__(self, labelText, cx, cy, width, height, function,
                  border='black', color='white', labelColor='black', 
-                 hoverBorderColor='orange', borderWidth=1, font='monospace', 
+                 hoverBorderColor='deepPink', borderWidth=1, font='monospace', 
                  labelSize=None, boldText=False, italicText=False, 
                  drawAsToggled=False):
         self.labelText = labelText
@@ -73,8 +73,8 @@ class Button:
                   italic=self.italicText)
         # if untoggled, make it darker:
         if self.drawAsToggled and not self.toggled:
-            drawRect(x, y, w, h, fill='black', border=borderColor,
-                     opacity=45, align='center')
+            drawRect(x, y, w, h, fill='black', border=borderColor, 
+                     borderWidth=self.borderWidth, opacity=45, align='center')
 
     def getScaledXYWH(self, app):
         # returns the scaled bounds of the button
@@ -86,11 +86,11 @@ class Button:
     
 # ########################    Knob Class    #############################
 class Knob:
-
+    # THE HARDEST FUCKING PART OF THIS PROJECT
     def __init__(self, cx, cy, radius, min, max, defaultVal, function,
                  curveFunction='linear', color='white', accentColor='black', 
                  borderWidth=1, alwaysShowVal=False, label=None, 
-                 labelColor='black', percentKnob=False):
+                 labelColor='black', percentKnob=False, hoverColor='deepPink'):
         self.cx, self.cy, self.radius = cx, cy, radius
         self.min, self.max = min, max
         self.defaultVal = defaultVal
@@ -102,6 +102,8 @@ class Knob:
         self.color = color
         self.accentColor = accentColor
         self.labelColor = labelColor
+        self.hoverColor = hoverColor
+        self.hovered = False
         self.borderWidth = borderWidth
         self.alwaysShowVal=alwaysShowVal
         self.percentKnob = percentKnob # does self.val represent a percent?
@@ -181,18 +183,22 @@ class Knob:
     def draw(self, app):
         x, y, r = self.getScaledXYRad(app)
         sizeConstant = app.windowSize/app.baseWindowSize
+        if self.hovered or self.mouseHold:
+            borderColor = self.hoverColor
+        else:
+            borderColor = self.accentColor
         # draw the circle:
-        drawCircle(x, y, r, fill=self.color, border=self.accentColor,
+        drawCircle(x, y, r, fill=self.color, border=borderColor,
                    borderWidth=self.borderWidth)
         # get the point along the circle corresponding to knob position:
         x1, y1 = self.getPointOnEdge(x, y, r) # pass these in to not compute x2
         # draw a line between center and that point:
-        drawLine(x, y, x1, y1, fill=self.accentColor)
+        drawLine(x, y, x1, y1, fill=borderColor)
         if self.mouseHold or self.alwaysShowVal:
             # When changing the parameter or on alwaysShowVal, display its value
-            scaledW = r*1.7 # arbitrary
-            scaledH = r*0.9 # arbitrary
-            distanceY = r*1.5 # arbitrary
+            scaledW = r*1.7 # arbitrary/aesthetic
+            scaledH = r*0.9 # arbitrary/aesthetic
+            distanceY = r*1.5 # arbitrary/aesthetic
             drawRect(x, y - distanceY, scaledW, scaledH, fill=self.color, 
                      align='center', border=self.accentColor, 
                      borderWidth=self.borderWidth)
@@ -251,8 +257,16 @@ class Knob:
             self.val = self.percentTransform() # change val by the curve
             self.function(app, self.val)    # change whatever this knob changes
     
+    def mouseMove(self, mX, mY, app):
+        # just a boring hover effect
+        if self.mouseInKnob(mX, mY, app):
+            self.hovered = True
+        else:
+            self.hovered = False
+    
     def mouseRelease(self):
         self.mouseHold = False
+        self.hovered = False
 
     
     def stepTimer(self, app):

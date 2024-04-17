@@ -17,7 +17,7 @@ Displays a toggleable list of effects, dry/wet mutes, and effect parameters that
 
 TO DO in (more or less) order:
 - Make it look not like shit
-- User selectable buffer size/sample rate on launch
+- Add bitcrush, delay, chorus
 - Finish adding other filter modes
 - Convolution select
 - Compressor Makeup Gain

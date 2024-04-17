@@ -72,7 +72,8 @@ def makeSampleAndBufferButtons(app):
         sampleRate = sampleRates[i]
         app.sampleRateButtons.append(
             Button(sampleRate, 187.5, 100+i*33.3, 187.5, 31.25,
-                   makeSampleAndBufferFunctions(sampleRate))
+                   makeSampleAndBufferFunctions(sampleRate),
+                   color='lightGray', font='arial')
         )
     # same thing but for buffer sizes
     bufferSizes = ['64', '128', '256', '512', '1024', '2048']
@@ -80,7 +81,8 @@ def makeSampleAndBufferButtons(app):
         bufferSize = bufferSizes[i]
         app.bufferSizeButtons.append(
             Button(bufferSize, 187.5, 100+i*33.3, 187.5, 31.25, 
-                   makeSampleAndBufferFunctions(bufferSize))
+                   makeSampleAndBufferFunctions(bufferSize),
+                   color='lightGray', font='arial')
         )
 #                  -----------------------------
 #                           I/O screen
@@ -91,8 +93,7 @@ def makeIOButtons(app, IOList, direction):
         app.IOButtons.append(
             Button(
                 IOList[i], 187.5, 100+i*33.3, 187.5, 31.25, setInputName, 
-                color='antiqueWhite', labelColor='darkSlateGray', font='arial', 
-                boldText=True
+                color='lightGray', font='arial', boldText=True
                 )
             )
 
@@ -261,107 +262,112 @@ def makeControlObjects(app):
     # creates all the control objects required by the app.
     app.activeKnobs = [
         # filter freq
-        Knob(200, 30, 17, 20, 20000, 175, makeControlFunction('filterFreq'),
-             curveFunction='exponential', label='freq', color='gold'),
+        Knob(77, 55, 25, 20, 20000, 200, makeControlFunction('filterFreq'),
+             curveFunction='exponential', label='freq', color=app.filterColor),
         # filter resonance
-        Knob(245, 30, 17, 0, 1, 0, makeControlFunction('filterResonance'),
-             curveFunction='linear', label='reso', color='gold',
+        Knob(135, 70, 13, 0, 1, 0, makeControlFunction('filterResonance'),
+             curveFunction='linear', label='reso', color=app.filterColor,
              percentKnob=True),
         # filter drive
-        Knob(290, 30, 17, 1, 30, 1, makeControlFunction('filterDrive'),
-             curveFunction='linear', label='drive', color='gold'),
+        Knob(160, 35, 13, 1, 30, 1, makeControlFunction('filterDrive'),
+             curveFunction='linear', label='dBdrive', color=app.filterColor),
         # gate threshold
-        Knob(155, 130, 17, -60, 0, -60, makeControlFunction('gateThresh'),
-             curveFunction='logarithmic', label='thresh', color='khaki'),
+        Knob(30, 165, 17, -60, 0, -60, makeControlFunction('gateThresh'),
+            curveFunction='logarithmic', label='dBthresh', color=app.gateColor),
         # gate ratio
-        Knob(200, 130, 17, 1, 10, 1.0, makeControlFunction('gateRatio'),
-             curveFunction='linear', label='ratio', color='khaki'),
+        Knob(70, 135, 17, 1, 10, 1.0, makeControlFunction('gateRatio'),
+             curveFunction='linear', label='ratio', color=app.gateColor),
         # gate attack
-        Knob(245, 130, 17, 0.1, 500, 2.5, makeControlFunction('gateAttack'), 
-             curveFunction='exponential', label='attack', color='khaki'),
+        Knob(110, 165, 17, 0.1, 500, 2.5, makeControlFunction('gateAttack'), 
+             curveFunction='exponential', label='attack', color=app.gateColor),
         # gate release
-        Knob(290, 130, 17, 1, 1000, 250, makeControlFunction('gateRelease'),
-            curveFunction='exponential', label='release', color='khaki'),
+        Knob(150, 135, 17, 1, 1000, 250, makeControlFunction('gateRelease'),
+            curveFunction='exponential', label='release', color=app.gateColor),
         # compressor threshold
-        Knob(155, 180, 17, -60, 0, 0, makeControlFunction('compThresh'),
-             curveFunction='logarithmic', label='thresh', color='oliveDrab'),
+        Knob(30, 262.5, 17, -60, 0, 0, makeControlFunction('compThresh'),
+             curveFunction='logarithmic', label='thresh', color=app.compColor),
         # compressor ratio
-        Knob(200, 180, 17, 1, 20, 1, makeControlFunction('compRatio'), 
-             curveFunction='linear', label='ratio', color='oliveDrab'),
+        Knob(70, 232.5, 17, 1, 20, 1, makeControlFunction('compRatio'), 
+             curveFunction='linear', label='ratio', color=app.compColor),
         # compressor attack
-        Knob(245, 180, 17, 0.1, 500, 2.5, makeControlFunction('compAttack'),
-             curveFunction='exponential', label='attack', color='oliveDrab'),
+        Knob(110, 262.5, 17, 0.1, 500, 2.5, makeControlFunction('compAttack'),
+             curveFunction='exponential', label='attack', color=app.compColor),
         # compressor release
-        Knob(290, 180, 17, 1, 1000, 250, makeControlFunction('compRelease'),
-             curveFunction='exponential', label='release', color='oliveDrab'),
+        Knob(150, 232.5, 17, 1, 1000, 250, makeControlFunction('compRelease'),
+             curveFunction='exponential', label='release', color=app.compColor),
         #clipping threshold
-        Knob(155, 230, 17, -24, 0, 0, makeControlFunction('clipThresh'),
-             curveFunction='logarithmic', label='thresh', color='lime'),
+        Knob(50, 350, 22, -24, 0, 0, makeControlFunction('clipThresh'),
+             curveFunction='logarithmic', label='thresh', color=app.distColor),
         # distortion gain
-        Knob(155, 280, 17, 0, 30, 0, makeControlFunction('distGain'), 
-             curveFunction='linear', label='gain', color='fireBrick'),
+        Knob(130, 350, 22, 0, 30, 0, makeControlFunction('distGain'), 
+             curveFunction='linear', label='gain', color=app.distColor),
         # reverb size
-        Knob(155, 330, 17, 0, 1, 0.5, makeControlFunction('reverbSize'),
-             curveFunction='linear', label='size', color='skyBlue',
+        Knob(217.5, 262.5, 17, 0, 1, 0.5, makeControlFunction('reverbSize'),
+             curveFunction='linear', label='size', color=app.reverbColor,
              percentKnob=True),
         # reverb damping
-        Knob(200, 330, 17, 0, 1, 0.5, makeControlFunction('reverbDamping'),
-             curveFunction='linear', label='damping', color='skyBlue',
+        Knob(257.5, 232.5, 17, 0, 1, 0.5, makeControlFunction('reverbDamping'),
+             curveFunction='linear', label='damping', color=app.reverbColor,
              percentKnob=True),
         # reverb dry/wet
-        Knob(245, 330, 17, 0, 1, 0.5, makeControlFunction('reverbDryWet'),
-             curveFunction='linear', label='dry/wet', color='skyBlue',
+        Knob(297.5, 262.5, 17, 0, 1, 0.5, makeControlFunction('reverbDryWet'),
+             curveFunction='linear', label='dry/wet', color=app.reverbColor,
              percentKnob=True),
         # reverb width
-        Knob(290, 330, 17, 0, 1, 0.5, makeControlFunction('reverbWidth'),
-             curveFunction='linear', label='width', color='skyBlue',
+        Knob(327.5, 232.5, 17, 0, 1, 0.5, makeControlFunction('reverbWidth'),
+             curveFunction='linear', label='width', color=app.reverbColor,
              percentKnob=True),
         # convolution mix
-        Knob(155, 380, 17, 0, 1, 0.5, makeControlFunction('convolutionMix'),
-             curveFunction='linear', label='mix', color='thistle',
+        Knob(281.25, 345, 25, 0, 1, 0.5, makeControlFunction('convolutionMix'),
+             curveFunction='linear', label='mix', color=app.convolutionColor,
              percentKnob=True),
         # dry gain
-        Knob(315, 445, 17, -60, 6, 0, makeControlFunction('gainDry'),
+        Knob(250, 435, 22, -60, 6, 0, makeControlFunction('gainDry'),
              curveFunction='logarithmic', color='lightSlateGray', 
              label='dBdry'),
         # wet gain
-        Knob(355, 445, 17, -60, 6, 0, makeControlFunction('gainWet'), 
+        Knob(312.5, 435, 22, -60, 6, 0, makeControlFunction('gainWet'), 
             curveFunction='logarithmic', color='darkRed', label='dBwet')
     ]
+    ON_SYMBOL = 'Ѳ'
     app.activeButtons = [
         # goto edit I/O screen
         Button('Edit I/O', 350, 487.5, 44, 12.5, 
-               makeControlFunction('switchToInputsScreen'), color='gray', 
+               makeControlFunction('switchToInputsScreen'), color='dimGray', 
                labelColor='ghostWhite', font='arial',
                border=None, italicText=True),
         # toggle filter
-        Button('Filter', 80, 30, 70, 20, makeControlFunction('filter'),
-               drawAsToggled=True),
+        Button(ON_SYMBOL, 15, 35, 20, 20, makeControlFunction('filter'),
+               drawAsToggled=True, color=app.filterColor),
         # toggle invert
-        Button('Invert', 80, 80, 70, 20, makeControlFunction('invert'),
-               drawAsToggled=True),
+        # ø is standard iconography in audio for a polarity switch
+        Button('ø', 15, 80, 20, 20, makeControlFunction('invert'),
+               drawAsToggled=True, font='symbols', labelSize=18),
         # toggle gate
-        Button('Gate', 80, 130, 70, 20, makeControlFunction('gate'),
-               drawAsToggled=True),
+        Button(ON_SYMBOL, 15, 130, 20, 20, makeControlFunction('gate'),
+               drawAsToggled=True, color=app.gateColor),
         # toggle compressor
-        Button('Compressor', 80, 180, 70, 20, makeControlFunction('comp'),
-               drawAsToggled=True),
+        Button(ON_SYMBOL, 15, 227.5, 20, 20, makeControlFunction('comp'),
+               drawAsToggled=True, color=app.compColor),
         # toggle clipping
-        Button('Clipping', 80, 230, 70, 20, makeControlFunction('clipper'),
-               drawAsToggled=True),
+        Button(ON_SYMBOL, 15, 325, 20, 20, makeControlFunction('clipper'),
+               drawAsToggled=True, color=app.distColor),
         # toggle distortion
-        Button('Distortion', 80, 280, 70, 20, makeControlFunction('distortion'),
-               drawAsToggled=True),
+        Button(ON_SYMBOL, 95, 325, 20, 20, makeControlFunction('distortion'),
+               drawAsToggled=True, color=app.distColor),
         # toggle reverb
-        Button('Reverb', 80, 330, 70, 20, makeControlFunction('reverb'),
-               drawAsToggled=True),
+        Button(ON_SYMBOL, 202.5, 227.5, 20, 20, makeControlFunction('reverb'),
+               drawAsToggled=True, color=app.reverbColor),
         # toggle convolution
-        Button('Convolution', 80, 380, 70, 20, 
-               makeControlFunction('convolution'), drawAsToggled=True),
+        Button(ON_SYMBOL, 202.5, 325, 20, 20, 
+               makeControlFunction('convolution'), drawAsToggled=True,
+               color=app.convolutionColor),
         # mute dry
-        Button('M', 315, 420, 10, 10, makeControlFunction('muteDry'),
-               drawAsToggled=True, color='yellow', font='arial', labelSize=8),
+        Button('M', 220, 420, 10, 10, makeControlFunction('muteDry'),
+               drawAsToggled=True, color='yellow', font='arial', 
+               labelSize=8, border=None),
         # mute wet
-        Button('M', 355, 420, 10, 10, makeControlFunction('muteWet'),
-               drawAsToggled=True, color='yellow', font='arial', labelSize=8)
+        Button('M', 285, 420, 10, 10, makeControlFunction('muteWet'),
+               drawAsToggled=True, color='yellow', font='arial', 
+               labelSize=8, border=None)
     ]

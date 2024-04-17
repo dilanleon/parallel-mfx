@@ -27,7 +27,7 @@ def onAppStart(app):
     app.baseWindowSize = 500
     app.windowSize = 500 # app.windowSize == app.height, exists for clarity
     app.width, app.height = int(app.windowSize*(3/4)), app.windowSize
-    app.backgroundColor = 'dimGray'
+    app.backgroundColor = 'darkGray'
     app.inputDevice = None
     app.outputDevice = None
 
@@ -124,9 +124,11 @@ def idiotCheckScreen_redrawAll(app):
     drawRect(0, 0, app.width, app.height, fill=app.backgroundColor)
     drawLabel('Are you sure?', app.width/2, app.height/9, size=app.height/22)
     drawLabel('YOU FUCKING MORON', app.width/2, app.height/5.5,  # jest
-              fill='crimson', font='impact', size=app.height/22)
+              fill='crimson', font='impact', size=app.height/16,
+              border='black')
     drawLabel('This will cause feedback!', app.width/2, app.height/4, 
-              fill='red', font='impact', size=app.height/22)
+              fill='red', font='impact', size=app.height/16,
+              border='black')
     for button in app.idiotCheckScreenButtons:
         button.draw(app)
 
@@ -143,24 +145,62 @@ def idiotCheckScreen_onMousePress(app, mX, mY):
 # here lies the remains of stuff now in makeControls.py
 
 def mainScreen_onScreenActivate(app):
+    app.filterColor = 'gold'
+    app.gateColor = 'khaki'
+    app.compColor = 'oliveDrab'
+    app.distColor = 'fireBrick'
+    app.reverbColor = 'skyBlue'
+    app.convolutionColor = 'thistle'
     makeControlObjects(app)
+
+def mainScreen_drawPrettyStuff(app):
+    # where everything that makes stuff look better but does nothing else goes
+    realWindowHeight = app.height*19.5/20
+    textSize = app.height/28
+    textOffset = app.height/40
+    drawLine(app.width/2, 0, app.width/2, app.height)
+    for i in range(1, 5):
+        lineHeight = (realWindowHeight/5)*i
+        drawLine(0, lineHeight, app.width, lineHeight)
+    drawLabel('F   i   L   T   E   R', app.width/45, textOffset, 
+              font='arial', fill=app.filterColor, align='left', size=textSize)
+    drawLabel('G   A   T   e', app.width/45, realWindowHeight/5 + textOffset, 
+              font='arial', fill=app.gateColor, align='left', size=textSize)
+    drawLabel('C   O   m   P', app.width/45, realWindowHeight*2/5 + textOffset,
+              font='arial', fill=app.compColor, align='left', size=textSize)
+    drawLabel('C   L   i   P /D   i   S   T', app.width/45,
+              realWindowHeight*3/5 + textOffset, font='arial', 
+              fill=app.distColor, align='left', size=textSize)
+    drawLabel('R   e   V   E   R   B', app.width/2 + app.width/45, 
+              realWindowHeight*2/5 + textOffset, font='arial',
+              fill=app.reverbColor, align='left', size=textSize)
+    drawLabel('C   o   N   V   O   L   V', app.width/2 + app.width/45,
+              realWindowHeight*3/5 + textOffset, font='arial',
+              fill=app.convolutionColor, align='left', size=textSize)
+    drawLabel('M   A   s   T   E   R', app.width/2 + app.width/45,
+              realWindowHeight*4/5 + textOffset, font='arial',
+              fill='black', align='left', size=textSize)
 
 def mainScreen_redrawAll(app):
     drawRect(0, 0, app.width, app.height, fill=app.backgroundColor)
-    sizeConstant = app.height/app.baseWindowSize
+    # draw stuff to make it look nice:
+    mainScreen_drawPrettyStuff(app)
     drawRect(0, app.height*19/20, app.width, app.height/20, fill='slateGray')
     drawLabel('PBPP-112', app.width/12, app.height*19.5/20, font='impact',
-              size=14*sizeConstant, italic=True, fill='ghostWhite')
+              size=app.height/35, italic=True, 
+              fill=gradient('silver', 'white', start='bottom'))
+    # draw the actual stuff:
     for control in app.activeButtons + app.activeKnobs:
         control.draw(app)
 
 def mainScreen_onMousePress(app, mX, mY):
     for control in app.activeButtons + app.activeKnobs:
         control.checkIfPressed(mX, mY, app)
+    print(mX, mY)
 
 def mainScreen_onMouseMove(app, mX, mY):
-    for button in app.activeButtons:
-        button.mouseMove(mX, mY, app)
+    for control in app.activeButtons + app.activeKnobs:
+        control.mouseMove(mX, mY, app)
 
 def mainScreen_onMouseDrag(app, mX, mY):
     for knob in app.activeKnobs:
