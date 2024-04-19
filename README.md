@@ -1,8 +1,8 @@
 # 15-112 - project2
 
-<b>Parallel Bandpass Drum Dynamics, Harmonics, and Reverb Processor</b>
+<b>MultiFX Processor</b>
 
-Inspired by this video: https://youtu.be/4hGBYs10ZAU?si=jQk2Dl15u7sJtUK1
+Originally inspired by this video: https://youtu.be/4hGBYs10ZAU?si=jQk2Dl15u7sJtUK1
 
 TL:DW is that this is a technique to make drums sound awesome through dynamics and harmonics processing on a parallel bandpass filter applied to the fundemental frequency.
 Equivalent signal chain in Pro Tools:
@@ -16,7 +16,6 @@ Ambiances by EchoThief: http://www.echothief.com/
 Displays a toggleable list of effects, dry/wet mutes, and effect parameters that update in realtime
 
 TO DO in (more or less) order:
-- Add bitcrush, delay, chorus (should be EZPZ)
 - Convolution select
 - Finish adding other filter modes
 - Compressor Makeup Gain

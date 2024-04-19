@@ -1,8 +1,8 @@
 from threading import Thread
 from pedalboard.io import AudioStream
 from pedalboard import (LadderFilter, Invert, NoiseGate, Compressor, Clipping,
-                        Distortion, Reverb, Convolution, Gain, Mix, Chain,
-                        Pedalboard)
+                        Distortion, Reverb, Convolution, Bitcrush, Chorus,
+                        Delay, Gain, Mix, Chain, Pedalboard)
 
 
 class AudioHandler:
@@ -54,6 +54,21 @@ class AudioHandler:
             Distortion:{
                 'drive_db':0.0
                 },
+            Bitcrush:{
+                'bit_depth':8
+            },
+            Chorus:{
+                'rate_hz':1.0,
+                'depth':0.25,
+                'centre_delay_ms':7.0,
+                'feedback':0.0,
+                'mix':0.5
+            },
+            Delay:{
+                'delay_seconds':0.5,
+                'feedback':0.0,
+                'mix':0.5
+            },
             Reverb:{
                 'room_size':0.5,
                 'damping':0.5,
@@ -69,8 +84,8 @@ class AudioHandler:
                 }
             }
         self.effectOrder = (LadderFilter, Invert, NoiseGate, Compressor,
-                            MakeupGain, Clipping, Distortion, Reverb, 
-                            Convolution, Gain)
+                            MakeupGain, Clipping, Distortion, Bitcrush, Chorus, 
+                            Delay, Reverb, Convolution, Gain)
 
     def changeDryGain(self, newGain, unmute=False):
         # Gain is always last
@@ -135,6 +150,9 @@ class AudioHandler:
             'MakeupGain':MakeupGain,
             'Clipping':Clipping,
             'Distortion':Distortion,
+            'Bitcrush':Bitcrush,
+            'Chorus':Chorus,
+            'Delay':Delay,
             'Reverb':Reverb,
             'Convolution':Convolution
         }

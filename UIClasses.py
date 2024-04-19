@@ -223,7 +223,7 @@ class Knob:
                       fill=self.labelColor)
         if self.label != None:
             # as is r*1.33 (all of these values just looked good)
-            drawLabel(self.label, x, y + r*1.33, size=11*sizeConstant, 
+            drawLabel(self.label, x, y + r*1.25, size=11*sizeConstant, 
                       fill=self.labelColor)
 
     def mouseInKnob(self, mX, mY, app):

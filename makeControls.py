@@ -131,7 +131,7 @@ def makeIdiotCheckButtons(app):
     ]
 #                  -----------------------------------
 #                           main screen
-
+# the below function is why this whole file exists (it's really long...)
 def makeControlFunction(type):
     # Functions used by knobs and buttons throughout the  main app
     # one big ass function to group a bunch of stuff together really
@@ -163,6 +163,12 @@ def makeControlFunction(type):
         app.audio.togglePlugin('Clipping')
     def distortionToggle(app):
         app.audio.togglePlugin('Distortion')
+    def bitcrushToggle(app):
+        app.audio.togglePlugin('Bitcrush')
+    def chorusToggle(app):
+        app.audio.togglePlugin('Chorus')
+    def delayToggle(app):
+        app.audio.togglePlugin('Delay')
     def reverbToggle(app):
         app.audio.togglePlugin('Reverb')
     def convolutionToggle(app):
@@ -198,6 +204,24 @@ def makeControlFunction(type):
         app.audio.changePluginParam('Clipping', 'threshold_db', newThreshold)
     def changeDistortionGain(app, newGain):
         app.audio.changePluginParam('Distortion', 'drive_db', newGain)
+    def changeBitDepth(app, newDepth):
+        app.audio.changePluginParam('Bitcrush', 'bit_depth', newDepth)
+    def changeChorusRate(app, newRate):
+        app.audio.changePluginParam('Chorus', 'rate_hz', newRate)
+    def changeChorusDepth(app, newDepth):
+        app.audio.changePluginParam('Chorus', 'depth', newDepth)
+    def changeChorusCenterDelay(app, newDelay):
+        app.audio.changePluginParam('Chorus', 'centre_delay_ms', newDelay)
+    def changeChorusFeedback(app, newFeedback):
+        app.audio.changePluginParam('Chorus', 'feedback', newFeedback)
+    def changeChorusMix(app, newMix):
+        app.audio.changePluginParam('Chorus', 'mix', newMix)
+    def changeDelayTime(app, newTime):
+        app.audio.changePluginParam('Delay', 'delay_seconds', newTime)
+    def changeDelayFeedback(app, newFeedback):
+        app.audio.changePluginParam('Delay', 'feedback', newFeedback)
+    def changeDelayMix(app, newMix):
+        app.audio.changePluginParam('Delay', 'mix', newMix)
     def changeReverbSize(app, newSize):
         app.audio.changePluginParam('Reverb', 'room_size', newSize)
     def changeReverbDamping(app, newDamping):
@@ -242,6 +266,18 @@ def makeControlFunction(type):
         'clipThresh':changeClippingThreshold,
         'distortion':distortionToggle,
         'distGain':changeDistortionGain,
+        'bitcrush':bitcrushToggle,
+        'bitDepth':changeBitDepth,
+        'chorus':chorusToggle,                          # fucking
+        'chorusRate':changeChorusRate,
+        'chorusDepth':changeChorusDepth,
+        'chorusDelay':changeChorusCenterDelay,
+        'chorusFeedback':changeChorusFeedback,
+        'chorusMix':changeChorusMix,                  
+        'delay':delayToggle,                            # ass
+        'delayTime':changeDelayTime,
+        'delayFeedback':changeDelayFeedback,
+        'delayMix':changeDelayMix,
         'reverb':reverbToggle,
         'reverbSize':changeReverbSize,
         'reverbDamping':changeReverbDamping,            # dictionary
@@ -257,9 +293,11 @@ def makeControlFunction(type):
         }
     return functionDict[type]
 
+# you made it to the end! there's another one :-)
 def makeControlObjects(app):
     # knobs and buttons separate for your (my) calling convenience!
     # creates all the control objects required by the app.
+    # lots of magic numbers - they are arbitrary and determine UI layout.
     app.activeKnobs = [
         # filter freq
         Knob(77, 55, 25, 20, 20000, 200, makeControlFunction('filterFreq'),
@@ -301,13 +339,44 @@ def makeControlObjects(app):
         # distortion gain
         Knob(130, 350, 22, 0, 30, 0, makeControlFunction('distGain'), 
              curveFunction='linear', label='dBgain', color=app.distColor),
+        # bitcrush depth
+        Knob(93.75, 435, 25, 0, 10, 8, makeControlFunction('bitDepth'),
+             curveFunction='linear', label='depth', color=app.bitcrushColor),
+        # chorus rate
+        Knob(281.25, 60, 20, 0, 100, 1.0, makeControlFunction('chorusRate'),
+             curveFunction='exponential', label='rate', color=app.chorusColor),
+        # chorus center delay
+        Knob(235, 35, 13, 0.5, 50, 7, makeControlFunction('chorusDelay'),
+             curveFunction='exponential', label='delay', color=app.chorusColor),
+        # chorus depth
+        Knob(235, 72.5, 13, 0, 1, 0.25, makeControlFunction('chorusDepth'),
+             curveFunction='linear', label='depth', color=app.chorusColor,
+             percentKnob=True),
+        # chorus feedback
+        Knob(327.5, 35, 13, 0, 1, 0, makeControlFunction('chorusFeedback'),
+             curveFunction='linear', label='feedback', color=app.chorusColor),
+        # chorus mix
+        Knob(327.5, 72.5, 13, 0, 1, 0.5, makeControlFunction('chorusMix'),
+             curveFunction='linear', label='dry/wet', color=app.chorusColor,
+             percentKnob=True),
+        # delay time [seconds]
+        Knob(237.5, 155, 22, 0.001, 10, 0.5, makeControlFunction('delayTime'),
+            curveFunction='exponential', label='time[s]', color=app.delayColor),
+        # delay feedback
+        Knob(290, 155, 22, 0, 1, 0, makeControlFunction('delayFeedback'),
+             curveFunction='linear', label='feedback', color=app.delayColor,
+             percentKnob=True),
+        # delay mix
+        Knob(345, 160, 13, 0, 1, 0.5, makeControlFunction('delayMix'),
+             curveFunction='linear', label='dry/wet', color=app.delayColor,
+             percentKnob=True),
         # reverb size
         Knob(217.5, 262.5, 17, 0, 1, 0.5, makeControlFunction('reverbSize'),
              curveFunction='linear', label='size', color=app.reverbColor,
              percentKnob=True),
         # reverb damping
         Knob(257.5, 232.5, 17, 0, 1, 0.5, makeControlFunction('reverbDamping'),
-             curveFunction='linear', label='length', color=app.reverbColor,
+             curveFunction='linear', label='damp', color=app.reverbColor,
              percentKnob=True),
         # reverb dry/wet
         Knob(297.5, 262.5, 17, 0, 1, 0.5, makeControlFunction('reverbDryWet'),
@@ -355,6 +424,15 @@ def makeControlObjects(app):
         # toggle distortion
         Button(ON_SYMBOL, 95, 325, 20, 20, makeControlFunction('distortion'),
                drawAsToggled=True, color=app.distColor),
+        # toggle bitcrush
+        Button(ON_SYMBOL, 15, 422.5, 20, 20, makeControlFunction('bitcrush'),
+               drawAsToggled=True, color=app.bitcrushColor),
+        # toggle chorus
+        Button(ON_SYMBOL, 202.5, 35, 20, 20, makeControlFunction('chorus'),
+               drawAsToggled=True, color=app.chorusColor),
+        # toggle delay
+        Button(ON_SYMBOL, 202.5, 130, 20, 20, makeControlFunction('delay'),
+               drawAsToggled=True, color=app.delayColor),
         # toggle reverb
         Button(ON_SYMBOL, 202.5, 227.5, 20, 20, makeControlFunction('reverb'),
                drawAsToggled=True, color=app.reverbColor),

@@ -27,7 +27,7 @@ def onAppStart(app):
     app.baseWindowSize = 500
     app.windowSize = 500 # app.windowSize == app.height, exists for clarity
     app.width, app.height = int(app.windowSize*(3/4)), app.windowSize
-    app.backgroundColor = 'darkGray'
+    app.backgroundColor = gradient('darkGray', 'lightSlateGray', start='top')
     app.inputDevice = None
     app.outputDevice = None
 
@@ -149,6 +149,9 @@ def mainScreen_onScreenActivate(app):
     app.gateColor = 'khaki'
     app.compColor = 'oliveDrab'
     app.distColor = 'fireBrick'
+    app.bitcrushColor = 'lime'
+    app.chorusColor = 'teal'
+    app.delayColor = 'orange'
     app.reverbColor = 'skyBlue'
     app.convolutionColor = 'thistle'
     makeControlObjects(app)
@@ -170,7 +173,15 @@ def mainScreen_drawPrettyStuff(app):
               font='arial', fill=app.compColor, align='left', size=textSize)
     drawLabel('C   L   i   P /D   i   S   T', app.width/45,
               realWindowHeight*3/5 + textOffset, font='arial', 
-              fill=app.distColor, align='left', size=textSize)
+              fill=app.distColor, align='left', size=textSize),
+    drawLabel('B   i   T   C   R   S   H', app.width/45,
+              realWindowHeight*4/5 + textOffset, font='arial',
+              fill=app.bitcrushColor, align='left', size=textSize),
+    drawLabel('C   H   O   R   u   S', app.width/2 + app.width/45,
+              textOffset, fill=app.chorusColor, align='left', size=textSize),
+    drawLabel('D   E   L   A   y', app.width/2 + app.width/45,
+              realWindowHeight/5 + textOffset, font='arial', 
+              fill=app.delayColor, align='left', size=textSize),
     drawLabel('R   e   V   E   R   B', app.width/2 + app.width/45, 
               realWindowHeight*2/5 + textOffset, font='arial',
               fill=app.reverbColor, align='left', size=textSize)
@@ -180,15 +191,15 @@ def mainScreen_drawPrettyStuff(app):
     drawLabel('M   A   S   T   E   r', app.width/2 + app.width/45,
               realWindowHeight*4/5 + textOffset, font='arial',
               fill='black', align='left', size=textSize)
+    drawRect(0, app.height*19/20, app.width, app.height/20, 
+             fill=gradient('darkGray', 'silver', start='bottom'))
+    drawLabel('MFX-112', app.width/12, app.height*19.5/20, font='impact',
+              size=app.height/35, italic=True, 
+              fill=gradient('gainsboro', 'white', start='left'))
 
 def mainScreen_redrawAll(app):
     drawRect(0, 0, app.width, app.height, fill=app.backgroundColor)
-    # draw stuff to make it look nice:
     mainScreen_drawPrettyStuff(app)
-    drawRect(0, app.height*19/20, app.width, app.height/20, fill='slateGray')
-    drawLabel('PBPP-112', app.width/12, app.height*19.5/20, font='impact',
-              size=app.height/35, italic=True, 
-              fill=gradient('silver', 'white', start='bottom'))
     # draw the actual stuff:
     for control in app.activeButtons + app.activeKnobs:
         control.draw(app)
