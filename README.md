@@ -2,12 +2,9 @@
 
 <b>MultiFX Processor</b>
 
-Originally inspired by this video: https://youtu.be/4hGBYs10ZAU?si=jQk2Dl15u7sJtUK1
+Originally inspired by this video: https://youtu.be/4hGBYs10ZAU?si=jQk2Dl15u7sJtUK1, but is now just general multiFX with a dry passthrough
 
-TL:DW is that this is a technique to make drums sound awesome through dynamics and harmonics processing on a parallel bandpass filter applied to the fundemental frequency.
-Equivalent signal chain in Pro Tools:
-
-<img width="158" alt="image" src="https://github.com/dilanleon/project2/assets/92342633/0a0b2908-764c-4a6b-b9bb-fabe0e1648fa">
+run 'pip install pedalboard' in your terminal first!
 
 Uses Spotify's Pedalboard API: https://spotify.github.io/pedalboard/index.html
 
