@@ -79,7 +79,7 @@ class AudioHandler:
                 },
             Convolution:{
                 'impulse_response_filename':'''EchoThiefImpulseResponseLibrary\
-/Underground/Batcave.wav''',
+/Underground/BatteryPowell.wav''',
                 'mix':0.5
                 }
             }
@@ -219,6 +219,19 @@ class AudioHandler:
             insertedPlugin = self.createPluginInstance(plugin)
             self.insertPlugin(insertedPlugin, insertionIndex)
 
+    def specialConvolutionChangeHandler(self, path, index):
+        # convolution is the only plugin with something that is not a default
+        # parameter and is not stored in its object properties
+        newChain = [ ]
+        for i in range(len(self.stream.plugins[0][0])):
+            if i == index:
+                newChain.append(
+                    Convolution(path, mix=self.pluginParams[Convolution]['mix'])
+                    )
+            else:
+                newChain.append(self.stream.plugins[0][0][i])
+        self.updateChain(newChain)
+
     def changePluginParam(self, plugin, paramName, value):
         # first, convert plugin from string to type:
         plugin = self.pluginStrToType(plugin)
@@ -227,6 +240,11 @@ class AudioHandler:
         self.pluginParams[plugin][paramName] = value
         if plugin in self.chainTypes:   # if the plugin is enabled:
             pluginIndex = self.chainTypes.index(plugin)
+            # special case to handle impulse response, b/c it's not a property
+            if (plugin == Convolution and 
+                paramName == 'impulse_response_filename'):
+                self.specialConvolutionChangeHandler(value, pluginIndex)
+                return None
             # make a str with the command to execute
             # https://www.geeksforgeeks.org/execute-string-code-python/
             # {plugin}.paramName = value doesn't work w/o this hack
@@ -239,6 +257,13 @@ class AudioHandler:
             # we need to remake the whole pedalboard object... 
             # every time a knob is moved...
             self.updateChain(chainAsList)
+
+    def isPluginActive(self, plugin):
+        # convert string to type
+        plugin = self.pluginStrToType(plugin)
+        self.updateChainTypes()
+        return plugin in self.chainTypes
+
 
     def killStream(self):
         del self.stream

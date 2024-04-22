@@ -5,6 +5,7 @@
 # that they are easy to tweak. Button and Knob objects scale automatically,
 # so their x and y positions and other such params are fixed values.
 
+import os
 from UIClasses import *
 from pedalboard import LadderFilter
 from pedalboard.io import AudioStream
@@ -130,6 +131,51 @@ def makeIdiotCheckButtons(app):
         Button('YES', 250, 250, 70, 35, makeIdiotCheckYesNoFunction('yes'))
     ]
 #                  -----------------------------------
+#                           IR select screen
+# https://builtin.com/data-science/python-list-files-in-directory
+def makeIRButtonFunctions(filename):
+    def fileButtonFunction(app):
+        app.IRpath += '/' + filename
+        app.audio.changePluginParam('Convolution', 'impulse_response_filename',
+                                    app.IRpath)
+        setActiveScreen('mainScreen')
+    return fileButtonFunction
+
+def makeIRButtons(app, folder):
+    app.IRButtons = [ ]
+    app.files = os.listdir('EchoThiefImpulseResponseLibrary/' + folder)
+    i = 0
+    while i < len(app.files):
+        if app.files[i][0] != '.':        # hide hidden files
+            app.IRButtons.append(
+                Button(app.files[i], 275, 50 + i*17, 160, 16,
+                       makeIRButtonFunctions(app.files[i]), font='arial')
+            )
+            i += 1
+        else:
+            app.files.pop(i)
+
+def makeFolderButtonFunctions(folderName):
+    def folderButtonFunction(app):
+        app.IRpath += '/' + folderName
+        makeIRButtons(app, folderName)
+    return folderButtonFunction
+
+def makeFolderButtons(app):
+    app.IRFolderButtons = [ ]
+    app.folders = os.listdir('EchoThiefImpulseResponseLibrary')
+    i = 0
+    while i < len(app.folders):
+        if app.folders[i][0] != '.':        # hidden files should stay hidden!
+            app.IRFolderButtons.append(
+                Button(app.folders[i] + ' >', 105, 60 + i*33.3, 100, 31.25,
+                       makeFolderButtonFunctions(app.folders[i]), font='arial')
+            )
+            i += 1
+        else:
+            app.folders.pop(i)
+        
+#                  -----------------------------------
 #                           main screen
 # the below function is why this whole file exists (it's really long...)
 def makeControlFunction(type):
@@ -173,6 +219,8 @@ def makeControlFunction(type):
         app.audio.togglePlugin('Reverb')
     def convolutionToggle(app):
         app.audio.togglePlugin('Convolution')
+    def convolutionFileSelect(app):
+        setActiveScreen('IRSelectScreen')
     def muteDry(app):
         app.audio.toggleDryMute()
     def muteWet(app):
@@ -284,6 +332,7 @@ def makeControlFunction(type):
         'reverbDryWet':changeReverbDryWet,
         'reverbWidth':changeReverbWidth,
         'convolution':convolutionToggle,
+        'convolutionSelect':convolutionFileSelect,
         'convolutionMix':changeConvolutionMix,
         'switchToInputsScreen':switchToInputsScreen,    # lol
         'gainWet':gainWet,
@@ -440,6 +489,9 @@ def makeControlObjects(app):
         Button(ON_SYMBOL, 202.5, 325, 20, 20, 
                makeControlFunction('convolution'), drawAsToggled=True,
                color=app.convolutionColor),
+        # select convolution file
+        Button('select', 205, 375, 30, 20, 
+               makeControlFunction('convolutionSelect'), font='arial'),
         # mute dry
         Button('M', 220, 420, 15, 15, makeControlFunction('muteDry'),
                drawAsToggled=True, color='yellow', font='arial', 

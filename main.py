@@ -140,6 +140,26 @@ def idiotCheckScreen_onMousePress(app, mX, mY):
     for button in app.idiotCheckScreenButtons:
         button.checkIfPressed(mX, mY, app)
 
+########################## IR SELECT SCREEN ############################
+
+def IRSelectScreen_onScreenActivate(app):
+    app.IRpath = 'EchoThiefImpulseResponseLibrary'
+    app.IRButtons = [ ]
+    makeFolderButtons(app)
+
+def IRSelectScreen_redrawAll(app):
+    drawLabel('IR SELECT', app.width/2, app.height/30, size=app.height/20)
+    for button in app.IRFolderButtons + app.IRButtons:
+        button.draw(app)
+
+def IRSelectScreen_onMousePress(app, mX, mY):
+    for button in app.IRFolderButtons + app.IRButtons:
+        button.checkIfPressed(mX, mY, app)
+
+def IRSelectScreen_onMouseMove(app, mX, mY):
+    for button in app.IRFolderButtons + app.IRButtons:
+        button.mouseMove(mX, mY, app)
+
 ############################# MAIN SCREEN ##############################
 
 # here lies the remains of stuff now in makeControls.py
@@ -154,7 +174,12 @@ def mainScreen_onScreenActivate(app):
     app.delayColor = 'orange'
     app.reverbColor = 'skyBlue'
     app.convolutionColor = 'thistle'
-    makeControlObjects(app)
+# https://stackoverflow.com/questions/9390126/pythonic-way-to-check-if-something-exists
+    # if the objects don't exist, make them:
+    try:
+        app.activeButtons
+    except AttributeError:
+        makeControlObjects(app)
 
 def mainScreen_drawPrettyStuff(app):
     # where everything that makes stuff look better but does nothing else goes
