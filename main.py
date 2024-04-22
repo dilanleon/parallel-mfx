@@ -112,7 +112,7 @@ def inputsScreen_onMousePress(app, mX, mY):
             app.outputDevice == 'MacBook Pro Speakers'):
             setActiveScreen('idiotCheckScreen')
             return
-        makeAudioStream(app, app.sampleRate, app.bufferSize)
+        makeAudioStream(app)
         setActiveScreen('mainScreen')
 
 ######################### IDIOT CHECK SCREEN ###########################
@@ -169,7 +169,7 @@ def mainScreen_onScreenActivate(app):
     app.filterColor = 'gold'
     app.gateColor = 'khaki'
     app.compColor = 'oliveDrab'
-    app.distColor = 'lightCoral'
+    app.distColor = 'maroon'
     app.bitcrushColor = 'lime'
     app.chorusColor = 'teal'
     app.delayColor = 'orange'
@@ -178,7 +178,7 @@ def mainScreen_onScreenActivate(app):
 # https://stackoverflow.com/questions/9390126/pythonic-way-to-check-if-something-exists
     # if the objects don't exist, make them:
     try:
-        app.activeButtons
+        app.activeButtons + app.activeKnobs
     except AttributeError:
         makeControlObjects(app)
 

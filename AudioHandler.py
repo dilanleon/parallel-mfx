@@ -1,4 +1,3 @@
-from threading import Thread
 from pedalboard.io import AudioStream
 from pedalboard import (LadderFilter, Invert, NoiseGate, Compressor, Clipping,
                         Distortion, Reverb, Convolution, Bitcrush, Chorus,
@@ -18,9 +17,7 @@ class AudioHandler:
                                   sample_rate=sampleRate,
                                   plugins=defaultPlugins,
                                   allow_feedback=True)
-        # self.audioThread = Thread(target=self.stream.run, daemon=True)
-        # self.audioThread.start()
-        self.stream.__enter__()
+        self.stream.__enter__()     # runs an asynch C++ process (no Threads!)
         self.dryGain, self.wetGain = 0.0, 0.0       # not stored in pluginParams
         self.dryMute, self.wetMute = False, False   # not stored in pluginParams
         MakeupGain = Gain       # So it has a different name @TODO
@@ -263,6 +260,20 @@ class AudioHandler:
         directoryTree = path.split('/')
         pathRepr =  directoryTree[-2] + ' > ' + directoryTree[-1]
         return pathRepr
+    
+    def changeSettings(self, inputDevice, outputDevice, bufferSize, sampleRate):
+        # call this to change the I/O / Buffer/sample rate settings on an
+        # existing AudioHandler object
+        self.stream = AudioStream(input_device_name=inputDevice, 
+                                  output_device_name=outputDevice,
+                                  buffer_size=bufferSize,
+                                  sample_rate=sampleRate,
+                                  plugins=self.previousStreamPlugins,
+                                  allow_feedback=True)
+        self.stream.__enter__()
 
     def killStream(self):
-        del self.stream
+        # first, store the current plugins:
+        print(self.stream.plugins)
+        self.previousStreamPlugins = self.stream.plugins
+        self.stream.__exit__(0, 0, 0)

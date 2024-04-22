@@ -15,9 +15,18 @@ HOV_COLOR = 'mediumSlateBlue'  # hover color for non-main app screens
 
 #                  -----------------------------
 #                          many screens
-def makeAudioStream(app, sampleRate, bufferSize):
-    app.audio = AudioHandler(app.inputDevice, app.outputDevice, 
-                             bufferSize=bufferSize, sampleRate=sampleRate)
+def makeAudioStream(app):
+    # make the stream if it doesn't exist. Else, update settings and start it
+    try:
+        app.audio
+    except AttributeError:
+        app.audio = AudioHandler(app.inputDevice, app.outputDevice, 
+                                 bufferSize=app.bufferSize, 
+                                 sampleRate=app.sampleRate)
+    else:
+        app.audio.changeSettings(app.inputDevice, app.outputDevice,
+                                 bufferSize=app.bufferSize, 
+                                 sampleRate=app.sampleRate)
 #                  -----------------------------
 #                  sample rate/buffer size select
 def makeSampleAndBufferFunctions(type):
@@ -120,7 +129,7 @@ def makeIOSetterFunction(i, direction):
 def makeIdiotCheckYesNoFunction(yesNo):
     if yesNo == 'yes':
         def yes(app):
-            makeAudioStream(app, app.sampleRate, app.bufferSize)
+            makeAudioStream(app)
             setActiveScreen('mainScreen')
         return yes
     if yesNo == 'no':
@@ -393,7 +402,7 @@ def makeControlObjects(app):
         Knob(50, 350, 22, -24, 0, 0, makeControlFunction('clipThresh'),
             curveFunction='logarithmic', label='dBthresh', color=app.distColor),
         # distortion gain
-        Knob(130, 350, 22, 0, 30, 0, makeControlFunction('distGain'), 
+        Knob(130, 350, 22, 0, 60, 0, makeControlFunction('distGain'), 
              curveFunction='linear', label='dBgain', color=app.distColor),
         # bitcrush depth
         Knob(93.75, 435, 25, 0, 10, 8, makeControlFunction('bitDepth'),
