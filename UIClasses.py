@@ -12,7 +12,7 @@ class Button:
     
     def __init__(self, labelText, cx, cy, width, height, function,
                  border='black', color='white', labelColor='black', 
-                 hoverBorderColor='deepPink', borderWidth=1, font='monospace', 
+                 hoverBorderColor='red', borderWidth=1, font='monospace', 
                  labelSize=None, boldText=False, italicText=False, 
                  drawAsToggled=False):
         self.labelText = labelText
@@ -90,7 +90,7 @@ class Knob:
     def __init__(self, cx, cy, radius, min, max, defaultVal, function,
                  curveFunction='linear', color='white', accentColor='black', 
                  borderWidth=1, alwaysShowVal=False, label=None, 
-                 labelColor='black', percentKnob=False, hoverColor='deepPink'):
+                 labelColor='black', percentKnob=False, hoverColor='red'):
         self.cx, self.cy, self.radius = cx, cy, radius
         self.min, self.max = min, max
         self.defaultVal = defaultVal
@@ -106,6 +106,7 @@ class Knob:
         self.hovered = False
         self.borderWidth = borderWidth
         self.alwaysShowVal=alwaysShowVal
+        self.fontSize = radius * 0.65 if radius < 22 else 11
         self.percentKnob = percentKnob # does self.val represent a percent?
         self.mouseHold = False         # is this knob being modified?
         self.lastY = None              # by how much? (Y - lastY)
@@ -222,9 +223,8 @@ class Knob:
             drawLabel(displayVal, x, y - distanceY, size=r*0.5, font='arial',
                       fill=self.labelColor)
         if self.label != None:
-            # as is r*1.33 (all of these values just looked good)
-            drawLabel(self.label, x, y + r*1.25, size=11*sizeConstant, 
-                      fill=self.labelColor)
+            drawLabel(self.label, x, y + r*1.30, 
+                      size=self.fontSize*sizeConstant, fill=self.labelColor)
 
     def mouseInKnob(self, mX, mY, app):
         # check if distance between knob center and mX, mY < radius

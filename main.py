@@ -43,7 +43,7 @@ def forceResizeTo3By4(app):
 
 ##################### SAMPLE RATE/BUFFER SIZE SCREEN ####################
 
-def sampleRateBufferSize_onScreenActivate(app):     # @TODO
+def sampleRateBufferSize_onScreenActivate(app):     
     app.sampleRate, app.bufferSize = None, None
     makeSampleAndBufferButtons(app)
 
@@ -123,12 +123,11 @@ def idiotCheckScreen_onScreenActivate(app):
 def idiotCheckScreen_redrawAll(app):
     drawRect(0, 0, app.width, app.height, fill=app.backgroundColor)
     drawLabel('Are you sure?', app.width/2, app.height/9, size=app.height/22)
-    drawLabel('YOU FUCKING MORON', app.width/2, app.height/5.5,  # jest
-              fill='crimson', font='impact', size=app.height/16,
-              border='black')
+    drawLabel('YOU FUCKING MORON!', app.width/2, app.height/5.5,  # jest
+              fill='crimson', font='arial', size=app.height/16, bold=True, 
+              italic=True)
     drawLabel('This will cause feedback!', app.width/2, app.height/4, 
-              fill='red', font='impact', size=app.height/16,
-              border='black')
+              fill='red', font='arial', size=app.height/16, bold=True)
     for button in app.idiotCheckScreenButtons:
         button.draw(app)
 
@@ -143,12 +142,14 @@ def idiotCheckScreen_onMousePress(app, mX, mY):
 ########################## IR SELECT SCREEN ############################
 
 def IRSelectScreen_onScreenActivate(app):
-    app.IRpath = 'EchoThiefImpulseResponseLibrary'
+    app.IRpath = ''
     app.IRButtons = [ ]
     makeFolderButtons(app)
 
 def IRSelectScreen_redrawAll(app):
-    drawLabel('IR SELECT', app.width/2, app.height/30, size=app.height/20)
+    drawRect(0, 0, app.width, app.height, fill=app.backgroundColor)
+    drawLabel('IR SELECT', app.width/2, app.height/30, size=app.height/20,
+              bold=True, italic=True)
     for button in app.IRFolderButtons + app.IRButtons:
         button.draw(app)
 
@@ -168,7 +169,7 @@ def mainScreen_onScreenActivate(app):
     app.filterColor = 'gold'
     app.gateColor = 'khaki'
     app.compColor = 'oliveDrab'
-    app.distColor = 'fireBrick'
+    app.distColor = 'lightCoral'
     app.bitcrushColor = 'lime'
     app.chorusColor = 'teal'
     app.delayColor = 'orange'
@@ -190,36 +191,41 @@ def mainScreen_drawPrettyStuff(app):
     for i in range(1, 5):
         lineHeight = (realWindowHeight/5)*i
         drawLine(0, lineHeight, app.width, lineHeight)
-    drawLabel('F   i   L   T   E   R', app.width/45, textOffset, 
+    drawLabel('F   i   L   T   E   R', app.width/60, textOffset, bold=True,
               font='arial', fill=app.filterColor, align='left', size=textSize)
-    drawLabel('G   A   T   e', app.width/45, realWindowHeight/5 + textOffset, 
-              font='arial', fill=app.gateColor, align='left', size=textSize)
-    drawLabel('C   O   m   P', app.width/45, realWindowHeight*2/5 + textOffset,
-              font='arial', fill=app.compColor, align='left', size=textSize)
-    drawLabel('C   L   i   P /D   i   S   T', app.width/45,
-              realWindowHeight*3/5 + textOffset, font='arial', 
+    drawLabel('G   A   T   e', app.width/60, realWindowHeight/5 + textOffset, 
+              font='arial', fill=app.gateColor, align='left', size=textSize,
+              bold=True)
+    drawLabel('C   O   m   P', app.width/60, realWindowHeight*2/5 + textOffset,
+              font='arial', fill=app.compColor, align='left', size=textSize,
+              bold=True)
+    drawLabel('C   L   i   P /D   i   S   T', app.width/60,
+              realWindowHeight*3/5 + textOffset, font='arial', bold=True,
               fill=app.distColor, align='left', size=textSize),
-    drawLabel('B   i   T   C   R   S   H', app.width/45,
-              realWindowHeight*4/5 + textOffset, font='arial',
+    drawLabel('B   i   T   C   R   S   H', app.width/60,
+              realWindowHeight*4/5 + textOffset, font='arial', bold=True,
               fill=app.bitcrushColor, align='left', size=textSize),
-    drawLabel('C   H   O   R   u   S', app.width/2 + app.width/45,
-              textOffset, fill=app.chorusColor, align='left', size=textSize),
-    drawLabel('D   E   L   A   y', app.width/2 + app.width/45,
-              realWindowHeight/5 + textOffset, font='arial', 
+    drawLabel('C   H   O   R   u   S', app.width/2 + app.width/60, textOffset, 
+              bold=True, fill=app.chorusColor, align='left', size=textSize),
+    drawLabel('D   E   L   A   y', app.width/2 + app.width/60,
+              realWindowHeight/5 + textOffset, font='arial', bold=True,
               fill=app.delayColor, align='left', size=textSize),
-    drawLabel('R   e   V   E   R   B', app.width/2 + app.width/45, 
-              realWindowHeight*2/5 + textOffset, font='arial',
+    drawLabel('R   e   V   E   R   B', app.width/2 + app.width/60, 
+              realWindowHeight*2/5 + textOffset, font='arial', bold=True,
               fill=app.reverbColor, align='left', size=textSize)
-    drawLabel('C   O   N   V   o   L   V', app.width/2 + app.width/45,
-              realWindowHeight*3/5 + textOffset, font='arial',
+    drawLabel('C   O   N   V   o   L   V', app.width/2 + app.width/60,
+              realWindowHeight*3/5 + textOffset, font='arial', bold=True,
               fill=app.convolutionColor, align='left', size=textSize)
-    drawLabel('M   A   S   T   E   r', app.width/2 + app.width/45,
-              realWindowHeight*4/5 + textOffset, font='arial',
+    drawLabel(app.audio.getConvolutionName(), app.width*3/4, 
+              realWindowHeight*3/5 + textOffset*1.95, font='arial', italic=True,
+              fill='dimGray', size=textSize*0.3)
+    drawLabel('M   A   S   T   E   r', app.width/2 + app.width/60,
+              realWindowHeight*4/5 + textOffset, font='arial', bold=True,
               fill='black', align='left', size=textSize)
     drawRect(0, app.height*19/20, app.width, app.height/20, 
              fill=gradient('darkGray', 'silver', start='bottom'))
-    drawLabel('MFX-112', app.width/12, app.height*19.5/20, font='impact',
-              size=app.height/35, italic=True, 
+    drawLabel('MFX-112', app.width/10, app.height*19.5/20, font='arial',
+              size=app.height/35, italic=True, bold=True,
               fill=gradient('gainsboro', 'white', start='left'))
 
 def mainScreen_redrawAll(app):
@@ -232,7 +238,6 @@ def mainScreen_redrawAll(app):
 def mainScreen_onMousePress(app, mX, mY):
     for control in app.activeButtons + app.activeKnobs:
         control.checkIfPressed(mX, mY, app)
-    print(mX, mY)
 
 def mainScreen_onMouseMove(app, mX, mY):
     for control in app.activeButtons + app.activeKnobs:

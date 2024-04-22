@@ -11,6 +11,8 @@ from pedalboard import LadderFilter
 from pedalboard.io import AudioStream
 from AudioHandler import AudioHandler
 
+HOV_COLOR = 'mediumSlateBlue'  # hover color for non-main app screens
+
 #                  -----------------------------
 #                          many screens
 def makeAudioStream(app, sampleRate, bufferSize):
@@ -74,7 +76,7 @@ def makeSampleAndBufferButtons(app):
         app.sampleRateButtons.append(
             Button(sampleRate, 187.5, 100+i*33.3, 187.5, 31.25,
                    makeSampleAndBufferFunctions(sampleRate),
-                   color='lightGray', font='arial')
+                   color='lightGray', font='arial', hoverBorderColor=HOV_COLOR)
         )
     # same thing but for buffer sizes
     bufferSizes = ['64', '128', '256', '512', '1024', '2048']
@@ -83,7 +85,7 @@ def makeSampleAndBufferButtons(app):
         app.bufferSizeButtons.append(
             Button(bufferSize, 187.5, 100+i*33.3, 187.5, 31.25, 
                    makeSampleAndBufferFunctions(bufferSize),
-                   color='lightGray', font='arial')
+                   color='lightGray', font='arial', hoverBorderColor=HOV_COLOR)
         )
 #                  -----------------------------
 #                           I/O screen
@@ -94,7 +96,8 @@ def makeIOButtons(app, IOList, direction):
         app.IOButtons.append(
             Button(
                 IOList[i], 187.5, 100+i*33.3, 187.5, 31.25, setInputName, 
-                color='lightGray', font='arial', boldText=True
+                color='lightGray', font='arial', boldText=True, 
+                hoverBorderColor=HOV_COLOR
                 )
             )
 
@@ -127,8 +130,10 @@ def makeIdiotCheckYesNoFunction(yesNo):
 
 def makeIdiotCheckButtons(app):
     app.idiotCheckScreenButtons = [
-        Button('NO', 125, 250, 70, 35, makeIdiotCheckYesNoFunction('no')),
-        Button('YES', 250, 250, 70, 35, makeIdiotCheckYesNoFunction('yes'))
+        Button('NO', 125, 250, 70, 35, makeIdiotCheckYesNoFunction('no'), 
+               color='paleGreen', hoverBorderColor='green', borderWidth=3),
+        Button('YES', 250, 250, 70, 35, makeIdiotCheckYesNoFunction('yes'),
+               hoverBorderColor='darkRed', borderWidth=3)
     ]
 #                  -----------------------------------
 #                           IR select screen
@@ -149,7 +154,8 @@ def makeIRButtons(app, folder):
         if app.files[i][0] != '.':        # hide hidden files
             app.IRButtons.append(
                 Button(app.files[i], 275, 50 + i*17, 160, 16,
-                       makeIRButtonFunctions(app.files[i]), font='arial')
+                       makeIRButtonFunctions(app.files[i]), font='arial',
+                       hoverBorderColor=HOV_COLOR)
             )
             i += 1
         else:
@@ -157,7 +163,7 @@ def makeIRButtons(app, folder):
 
 def makeFolderButtonFunctions(folderName):
     def folderButtonFunction(app):
-        app.IRpath += '/' + folderName
+        app.IRpath = 'EchoThiefImpulseResponseLibrary/' + folderName
         makeIRButtons(app, folderName)
     return folderButtonFunction
 
@@ -169,7 +175,8 @@ def makeFolderButtons(app):
         if app.folders[i][0] != '.':        # hidden files should stay hidden!
             app.IRFolderButtons.append(
                 Button(app.folders[i] + ' >', 105, 60 + i*33.3, 100, 31.25,
-                       makeFolderButtonFunctions(app.folders[i]), font='arial')
+                       makeFolderButtonFunctions(app.folders[i]), font='arial',
+                       hoverBorderColor=HOV_COLOR)
             )
             i += 1
         else:
@@ -182,9 +189,9 @@ def makeControlFunction(type):
     # Functions used by knobs and buttons throughout the  main app
     # one big ass function to group a bunch of stuff together really
     #                        *buttons*
-    def switchToInputsScreen(app):
+    def switchToSampleBufferScreen(app):
         app.audio.killStream()
-        setActiveScreen('inputsScreen')
+        setActiveScreen('sampleRateBufferSize')
     def filterToggle(app):
         app.audio.togglePlugin('Filter')
     def setFilterTypeLPF12(app):
@@ -334,7 +341,7 @@ def makeControlFunction(type):
         'convolution':convolutionToggle,
         'convolutionSelect':convolutionFileSelect,
         'convolutionMix':changeConvolutionMix,
-        'switchToInputsScreen':switchToInputsScreen,    # lol
+        'switchToInputsScreen':switchToSampleBufferScreen,  # lol
         'gainWet':gainWet,
         'gainDry':gainDry,
         'muteDry':muteDry,
@@ -357,10 +364,10 @@ def makeControlObjects(app):
              percentKnob=True),
         # filter drive
         Knob(160, 35, 13, 1, 30, 1, makeControlFunction('filterDrive'),
-             curveFunction='linear', label='dBdrive', color=app.filterColor),
+             curveFunction='linear', label='drive', color=app.filterColor),
         # gate threshold
         Knob(30, 165, 17, -60, 0, -60, makeControlFunction('gateThresh'),
-            curveFunction='logarithmic', label='dBthresh', color=app.gateColor),
+            curveFunction='logarithmic', label='thresh', color=app.gateColor),
         # gate ratio
         Knob(70, 135, 17, 1, 10, 1.0, makeControlFunction('gateRatio'),
              curveFunction='linear', label='ratio', color=app.gateColor),
@@ -372,7 +379,7 @@ def makeControlObjects(app):
             curveFunction='exponential', label='release', color=app.gateColor),
         # compressor threshold
         Knob(30, 262.5, 17, -60, 0, 0, makeControlFunction('compThresh'),
-             curveFunction='logarithmic', label='dBthresh', color=app.compColor),
+             curveFunction='logarithmic', label='thresh', color=app.compColor),
         # compressor ratio
         Knob(70, 232.5, 17, 1, 20, 1, makeControlFunction('compRatio'), 
              curveFunction='linear', label='ratio', color=app.compColor),
@@ -384,7 +391,7 @@ def makeControlObjects(app):
              curveFunction='exponential', label='release', color=app.compColor),
         #clipping threshold
         Knob(50, 350, 22, -24, 0, 0, makeControlFunction('clipThresh'),
-             curveFunction='logarithmic', label='dBthresh', color=app.distColor),
+            curveFunction='logarithmic', label='dBthresh', color=app.distColor),
         # distortion gain
         Knob(130, 350, 22, 0, 30, 0, makeControlFunction('distGain'), 
              curveFunction='linear', label='dBgain', color=app.distColor),
@@ -410,7 +417,7 @@ def makeControlObjects(app):
              percentKnob=True),
         # delay time [seconds]
         Knob(237.5, 155, 22, 0.001, 10, 0.5, makeControlFunction('delayTime'),
-            curveFunction='exponential', label='time[s]', color=app.delayColor),
+            curveFunction='exponential', label='time', color=app.delayColor),
         # delay feedback
         Knob(290, 155, 22, 0, 1, 0, makeControlFunction('delayFeedback'),
              curveFunction='linear', label='feedback', color=app.delayColor,
@@ -436,7 +443,7 @@ def makeControlObjects(app):
              curveFunction='linear', label='width', color=app.reverbColor,
              percentKnob=True),
         # convolution mix
-        Knob(281.25, 345, 25, 0, 1, 0.5, makeControlFunction('convolutionMix'),
+        Knob(281.25, 350, 25, 0, 1, 0.5, makeControlFunction('convolutionMix'),
              curveFunction='linear', label='dry/wet', color=app.convolutionColor,
              percentKnob=True),
         # dry gain
@@ -445,9 +452,10 @@ def makeControlObjects(app):
              label='dBdry'),
         # wet gain
         Knob(312.5, 435, 22, -60, 6, 0, makeControlFunction('gainWet'), 
-            curveFunction='logarithmic', color='darkRed', label='dBwet')
+            curveFunction='logarithmic', color='darkRed', label='dBwet',
+            hoverColor='crimson')
     ]
-    ON_SYMBOL = 'O'         # Ѳ
+    ON_SYMBOL = 'X'         # Ѳ
     app.activeButtons = [
         # goto edit I/O screen
         Button('Edit I/O', 350, 487.5, 44, 12.5, 
@@ -490,8 +498,9 @@ def makeControlObjects(app):
                makeControlFunction('convolution'), drawAsToggled=True,
                color=app.convolutionColor),
         # select convolution file
-        Button('select', 205, 375, 30, 20, 
-               makeControlFunction('convolutionSelect'), font='arial'),
+        Button('select', 203.5, 380, 23, 13, 
+               makeControlFunction('convolutionSelect'), font='arial',
+               italicText=True),
         # mute dry
         Button('M', 220, 420, 15, 15, makeControlFunction('muteDry'),
                drawAsToggled=True, color='yellow', font='arial', 

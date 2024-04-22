@@ -79,7 +79,7 @@ class AudioHandler:
                 },
             Convolution:{
                 'impulse_response_filename':'''EchoThiefImpulseResponseLibrary\
-/Underground/BatteryPowell.wav''',
+/Underground/Batcave.wav''',
                 'mix':0.5
                 }
             }
@@ -258,12 +258,11 @@ class AudioHandler:
             # every time a knob is moved...
             self.updateChain(chainAsList)
 
-    def isPluginActive(self, plugin):
-        # convert string to type
-        plugin = self.pluginStrToType(plugin)
-        self.updateChainTypes()
-        return plugin in self.chainTypes
-
+    def getConvolutionName(self):
+        path = self.pluginParams[Convolution]['impulse_response_filename']
+        directoryTree = path.split('/')
+        pathRepr =  directoryTree[-2] + ' > ' + directoryTree[-1]
+        return pathRepr
 
     def killStream(self):
         del self.stream
