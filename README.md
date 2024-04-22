@@ -10,13 +10,9 @@ Uses Spotify's Pedalboard API: https://spotify.github.io/pedalboard/index.html
 
 Ambiances by EchoThief: http://www.echothief.com/
 
-Displays a toggleable list of effects, dry/wet mutes, and effect parameters that update in realtime
+Displays a toggleable list of effects, dry/wet mutes, and effect parameters that update in realtime. 
 
 TO DO in (more or less) order:
-- Convolution select
 - Finish adding other filter modes
 - Compressor Makeup Gain
 - LFOs capable of targeting any knob
-- Figure out how to access the data within the AudioStream
-- VU meters?? Maybe impossible maybe very easy?? Haven't experimented
-- Verify functionality on Windows/Linux
