@@ -6,6 +6,8 @@ Originally inspired by this video: https://youtu.be/4hGBYs10ZAU?si=jQk2Dl15u7sJt
 
 run 'pip install pedalboard' in your terminal first!
 
+Uses cmu_graphics, which is bundled.
+
 Uses Spotify's Pedalboard API: https://spotify.github.io/pedalboard/index.html
 
 Ambiances by EchoThief: http://www.echothief.com/
