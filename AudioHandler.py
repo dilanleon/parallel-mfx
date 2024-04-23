@@ -228,13 +228,25 @@ class AudioHandler:
             else:
                 newChain.append(self.stream.plugins[0][0][i])
         self.updateChain(newChain)
+    
+    def specialFilterTypeChanger(self, type):
+        type = self.filterTypeStringToObj(type)
+        if LadderFilter in self.chainTypes:
+            index = self.chainTypes.index(LadderFilter)
+            self.stream.plugins[0][0][index].mode = type
+        self.pluginParams[LadderFilter]['mode'] = type
 
     def changePluginParam(self, plugin, paramName, value):
         # first, convert plugin from string to type:
         plugin = self.pluginStrToType(plugin)
         self.updateChainTypes()
         # Wether the plugin is enabled or not, self.pluginParams needs updated
-        self.pluginParams[plugin][paramName] = value
+        # filter type needs special handling here, as it is a filter object
+        if plugin == LadderFilter and paramName == 'mode':
+            # special case as mode is a special object
+            self.specialFilterTypeChanger(value)
+        else:
+            self.pluginParams[plugin][paramName] = value
         if plugin in self.chainTypes:   # if the plugin is enabled:
             pluginIndex = self.chainTypes.index(plugin)
             # special case to handle impulse response, b/c it's not a property
@@ -242,13 +254,15 @@ class AudioHandler:
                 paramName == 'impulse_response_filename'):
                 self.specialConvolutionChangeHandler(value, pluginIndex)
                 return None
-            # make a str with the command to execute
-            # https://www.geeksforgeeks.org/execute-string-code-python/
-            # {plugin}.paramName = value doesn't work w/o this hack
-            execStr = (
-               f'self.stream.plugins[0][0][{pluginIndex}].{paramName} = {value}'
-            )
-            exec(execStr)
+            # as with filter type ('mode' attribute is a special object)
+            else:
+                # make a str with the command to execute
+                # https://www.geeksforgeeks.org/execute-string-code-python/
+                # {plugin}.paramName = value doesn't work w/o this hack
+                execStr = (
+                    f'''self.stream.plugins[0][0][{pluginIndex}].{paramName}\
+= {value}''')
+                exec(execStr)
             chainAsList = [plugin for plugin in self.stream.plugins[0][0]]
             # also, just changing the value doesn't work - 
             # we need to remake the whole pedalboard object... 
@@ -261,6 +275,37 @@ class AudioHandler:
         pathRepr =  directoryTree[-2] + ' > ' + directoryTree[-1]
         return pathRepr
     
+    def filterTypeStringToObj(self, str):
+        dict = {
+            'LadderFilter.HPF12':LadderFilter.HPF12,
+            'LadderFilter.HPF24':LadderFilter.HPF24,
+            'LadderFilter.LPF12':LadderFilter.LPF12,
+            'LadderFilter.LPF24':LadderFilter.LPF24,
+            'LadderFilter.BPF12':LadderFilter.BPF12,
+            'LadderFilter.BPF24':LadderFilter.BPF24
+        }
+        return dict[str]
+    
+    def setFilterType(self, slope, band):
+        # band = 'HPF', 'LPF' or 'BPF'
+        # slope = 12 or 24
+        # set the right one depending on inputs
+        if band == 'HPF':
+            if slope == 12:
+                self.changePluginParam('Filter', 'mode', 'LadderFilter.HPF12')
+            elif slope == 24:
+                self.changePluginParam('Filter', 'mode', 'LadderFilter.HPF24')
+        elif band == 'LPF':
+            if slope == 12:
+                self.changePluginParam('Filter', 'mode', 'LadderFilter.LPF12')
+            elif slope == 24:
+                self.changePluginParam('Filter', 'mode', 'LadderFilter.LPF24')
+        elif band == 'BPF':
+            if slope == 12:
+                self.changePluginParam('Filter', 'mode', 'LadderFilter.BPF12')
+            elif slope == 24:
+                self.changePluginParam('Filter', 'mode', 'LadderFilter.BPF24')
+    
     def changeSettings(self, inputDevice, outputDevice, bufferSize, sampleRate):
         # call this to change the I/O / Buffer/sample rate settings on an
         # existing AudioHandler object
@@ -271,6 +316,11 @@ class AudioHandler:
                                   plugins=self.previousStreamPlugins,
                                   allow_feedback=True)
         self.stream.__enter__()
+    
+    def isPluginActive(self, plugin):
+        self.updateChainTypes()
+        plugin = self.pluginStrToType(plugin)
+        return plugin in self.chainTypes
 
     def killStream(self):
         # first, store the current plugins:

@@ -203,18 +203,21 @@ def makeControlFunction(type):
         setActiveScreen('sampleRateBufferSize')
     def filterToggle(app):
         app.audio.togglePlugin('Filter')
-    def setFilterTypeLPF12(app):
-        app.audio.changePluginParam('Filter', 'mode', LadderFilter.LPF12)
-    def setFilterTypeHPF12(app):
-        app.audio.changePluginParam('Filter', 'mode', LadderFilter.HPF12)
-    def setFilterTypeBPF12(app):
-        app.audio.changePluginParam('Filter', 'mode', LadderFilter.BPF12)
-    def setFilterTypeLPF24(app):
-        app.audio.changePluginParam('Filter', 'mode', LadderFilter.LPF24)
-    def setFilterTypeHPF24(app):
-        app.audio.changePluginParam('Filter', 'mode', LadderFilter.HPF24)
-    def setFilterTypeBPF24(app):
-        app.audio.changePluginParam('Filter', 'mode', LadderFilter.BPF24)
+    def setFilterSlope12(app):
+        app.filterSlope = 12
+        app.audio.setFilterType(app.filterSlope, app.filterBand)
+    def setFilterSlope24(app):
+        app.filterSlope = 24
+        app.audio.setFilterType(app.filterSlope, app.filterBand)
+    def setFilterBandHPF(app):
+        app.filterBand = 'HPF'
+        app.audio.setFilterType(app.filterSlope, app.filterBand)
+    def setFilterBandBPF(app):
+        app.filterBand = 'BPF'
+        app.audio.setFilterType(app.filterSlope, app.filterBand)
+    def setFilterBandLPF(app):
+        app.filterBand = 'LPF'
+        app.audio.setFilterType(app.filterSlope, app.filterBand)
     def invertToggle(app):
         app.audio.togglePlugin('Invert')
     def gateToggle(app):
@@ -306,15 +309,15 @@ def makeControlFunction(type):
     #     put the functions in a dictionary and return the desired one
     functionDict = {        # holy fucking fuck
         'filter':filterToggle,
-        'filterLPF12':setFilterTypeLPF12,               # really
-        'filterHPF12':setFilterTypeHPF12,
-        'filterBPF12':setFilterTypeBPF12,
-        'filterLPF24':setFilterTypeLPF24,
-        'filterHPF24':setFilterTypeHPF24,
-        'filterBPF24':setFilterTypeBPF24,               # insanely
+        'filter12':setFilterSlope12,
+        'filterHPF':setFilterBandHPF,
+        'filterBPF':setFilterBandBPF,
+        'filterLPF':setFilterBandLPF,                   # really
+        'filter12':setFilterSlope12,   
+        'filter24':setFilterSlope24,           
         'filterFreq':changeFilterFrequency,
         'filterResonance':changeFilterResonance,
-        'filterDrive':changeFilterDrive,
+        'filterDrive':changeFilterDrive,                # insanely
         'invert':invertToggle,
         'gate':gateToggle,                              # long
         'gateThresh':changeGateThreshold,
@@ -378,7 +381,7 @@ def makeControlObjects(app):
         Knob(30, 165, 17, -60, 0, -60, makeControlFunction('gateThresh'),
             curveFunction='logarithmic', label='thresh', color=app.gateColor),
         # gate ratio
-        Knob(70, 135, 17, 1, 10, 1.0, makeControlFunction('gateRatio'),
+        Knob(70, 135, 17, 1, 20, 1.0, makeControlFunction('gateRatio'),
              curveFunction='linear', label='ratio', color=app.gateColor),
         # gate attack
         Knob(110, 165, 17, 0.1, 500, 2.5, makeControlFunction('gateAttack'), 
@@ -398,7 +401,7 @@ def makeControlObjects(app):
         # compressor release
         Knob(150, 232.5, 17, 1, 1000, 250, makeControlFunction('compRelease'),
              curveFunction='exponential', label='release', color=app.compColor),
-        #clipping threshold
+        # clipping threshold
         Knob(50, 350, 22, -24, 0, 0, makeControlFunction('clipThresh'),
             curveFunction='logarithmic', label='dBthresh', color=app.distColor),
         # distortion gain
@@ -467,13 +470,28 @@ def makeControlObjects(app):
     ON_SYMBOL = 'X'         # Ѳ
     app.activeButtons = [
         # goto edit I/O screen
-        Button('Edit I/O', 350, 487.5, 44, 12.5, 
+        Button('Edit I/O', 347.5, 487.5, 44, 12.5, 
                makeControlFunction('switchToInputsScreen'), color='dimGray', 
                labelColor='ghostWhite', font='arial',
                border=None, italicText=True),
         # toggle filter
         Button(ON_SYMBOL, 15, 35, 20, 20, makeControlFunction('filter'),
                drawAsToggled=True, color=app.filterColor),
+        # HPF
+        Button('/‾‾', 10, 49.5, 10, 8, makeControlFunction('filterHPF'),
+               color=app.filterColor, font='arial', labelSize=7),
+        # BPF
+        Button('/‾\\', 10, 57.5, 10, 8, makeControlFunction('filterBPF'),
+               color=app.filterColor, font='arial', labelSize=7),
+        # LPF
+        Button('‾‾\\', 10, 65.5, 10, 8, makeControlFunction('filterLPF'),
+               color=app.filterColor, font='arial', labelSize=7),
+        # 12 dB Slope
+        Button('12', 20, 51.5, 10, 12, makeControlFunction('filter12'),
+               color=app.filterColor, font='arial'),
+        # 24 dB Slope
+        Button('24', 20, 63.5, 10, 12, makeControlFunction('filter24'),
+               color=app.filterColor, font='arial'),
         # toggle invert
         # ø is standard iconography in audio for a polarity switch
         Button('ø', 15, 80, 20, 20, makeControlFunction('invert'),

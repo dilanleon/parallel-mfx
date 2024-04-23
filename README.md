@@ -15,6 +15,6 @@ Ambiances by EchoThief: http://www.echothief.com/
 Displays a toggleable list of effects, dry/wet mutes, and effect parameters that update in realtime. 
 
 TO DO in (more or less) order:
-- Finish adding other filter modes
+- Better commenting
 - Compressor Makeup Gain
 - LFOs capable of targeting any knob

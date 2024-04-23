@@ -4,8 +4,10 @@ from makeControls import *
 from pedalboard.io import AudioStream
 
 # Parallel Bandpass Drum Dynamics, Harmonics, and Reverb Processing
-# PBPP-112 (Parallel Band Pass Processor for 15-112)
+# MFX-112 (Multi Effects Processor for 15-112)
 # Written by Dilan Juan Leon for CMU 15-112 project2
+
+
 
 '''
 Sources:
@@ -175,6 +177,8 @@ def mainScreen_onScreenActivate(app):
     app.delayColor = 'orange'
     app.reverbColor = 'skyBlue'
     app.convolutionColor = 'thistle'
+    app.filterSlope = 12
+    app.filterBand = 'BPF'
 # https://stackoverflow.com/questions/9390126/pythonic-way-to-check-if-something-exists
     # if the objects don't exist, make them:
     try:
@@ -229,15 +233,21 @@ def mainScreen_drawPrettyStuff(app):
               fill=gradient('gainsboro', 'white', start='left'))
 
 def mainScreen_redrawAll(app):
+    sizeConstant = app.windowSize/app.baseWindowSize
     drawRect(0, 0, app.width, app.height, fill=app.backgroundColor)
     mainScreen_drawPrettyStuff(app)
     # draw the actual stuff:
     for control in app.activeButtons + app.activeKnobs:
         control.draw(app)
+    # hacky way to darken the filter mode buttons when not toggled
+    if not app.audio.isPluginActive('Filter'):
+        drawRect(5*sizeConstant, 45*sizeConstant, 20*sizeConstant, 
+                 25*sizeConstant, opacity=50)
 
 def mainScreen_onMousePress(app, mX, mY):
     for control in app.activeButtons + app.activeKnobs:
         control.checkIfPressed(mX, mY, app)
+    print(mX, mY)
 
 def mainScreen_onMouseMove(app, mX, mY):
     for control in app.activeButtons + app.activeKnobs:
