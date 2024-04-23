@@ -3,7 +3,6 @@ from pedalboard import (LadderFilter, Invert, NoiseGate, Compressor, Clipping,
                         Distortion, Reverb, Convolution, Bitcrush, Chorus,
                         Delay, Gain, Mix, Chain, Pedalboard)
 
-
 class AudioHandler:
         
     def __init__(self, inputAudio, outputAudio, 
@@ -20,7 +19,6 @@ class AudioHandler:
         self.stream.__enter__()     # runs an asynch C++ process (no Threads!)
         self.dryGain, self.wetGain = 0.0, 0.0       # not stored in pluginParams
         self.dryMute, self.wetMute = False, False   # not stored in pluginParams
-        MakeupGain = Gain       # So it has a different name @TODO
         # The below dictionary will be called for plugin constructors as kwargs
         self.pluginParams = { 
             LadderFilter:{
@@ -42,9 +40,6 @@ class AudioHandler:
                 'attack_ms':2.5,
                 'release_ms':250.0
                 },
-            MakeupGain:{
-                'gain_db':0.0
-            },
             Clipping:{
                 'threshold_db':0.0
                 },
@@ -80,8 +75,9 @@ class AudioHandler:
                 'mix':0.5
                 }
             }
+        # The order effects are always in:
         self.effectOrder = (LadderFilter, Invert, NoiseGate, Compressor,
-                            MakeupGain, Clipping, Distortion, Bitcrush, Chorus, 
+                            Clipping, Distortion, Bitcrush, Chorus, 
                             Delay, Reverb, Convolution, Gain)
 
     def changeDryGain(self, newGain, unmute=False):
@@ -113,15 +109,16 @@ class AudioHandler:
             # stream.plugins gets overwritten on each param change
     
     def toggleDryMute(self):
-        if self.dryMute:
+        if self.dryMute: # if it is muted, set it to previous gain:
             self.changeDryGain(self.prevDryGain, unmute=True)
         else:
             self.prevDryGain = self.dryGain     # don't forget what it was!
             self.changeDryGain(-999)
             # even -60 dB is basically inaudible, this is easier than true mute
-        self.dryMute = not self.dryMute
+        self.dryMute = not self.dryMute # toggle mute property!
     
     def toggleWetMute(self):
+        # same general idea as the above, with dry swapped for wet
         if self.wetMute:
             self.changeWetGain(self.prevWetGain, unmute=True)
         else:
@@ -138,13 +135,13 @@ class AudioHandler:
             self.chainTypes.append(type(plugin))
     
     def pluginStrToType(self, pluginStr):
-        MakeupGain = Gain           # @TODO make MakeupGain work
+        # convert a string to a type (useful when interfacing with files where
+        #                             pedalboard has not been imported)
         typeDict = {
             'Filter':LadderFilter,
             'Invert':Invert,
             'Gate':NoiseGate,
             'Compressor':Compressor,
-            'MakeupGain':MakeupGain,
             'Clipping':Clipping,
             'Distortion':Distortion,
             'Bitcrush':Bitcrush,
@@ -154,6 +151,18 @@ class AudioHandler:
             'Convolution':Convolution
         }
         return typeDict[pluginStr]
+    
+    def filterTypeStringToObj(self, str):
+        # same deal here, just with LadderFilter Mode objects
+        dict = {
+            'LadderFilter.HPF12':LadderFilter.HPF12,
+            'LadderFilter.HPF24':LadderFilter.HPF24,
+            'LadderFilter.LPF12':LadderFilter.LPF12,
+            'LadderFilter.LPF24':LadderFilter.LPF24,
+            'LadderFilter.BPF12':LadderFilter.BPF12,
+            'LadderFilter.BPF24':LadderFilter.BPF24
+        }
+        return dict[str]
     
     def updateChain(self, newChain):
         # Update the entirety of self.stream.plugins (the only way that worked)
@@ -200,6 +209,7 @@ class AudioHandler:
         # Make an instance of specified plugin with the correct parameters,
         # as stored in self.pluginParams
         params = self.pluginParams[plugin]
+        # kwargs <3
         return plugin(**params)
 
     def togglePlugin(self, plugin):
@@ -221,6 +231,8 @@ class AudioHandler:
         # parameter and is not stored in its object properties
         newChain = [ ]
         for i in range(len(self.stream.plugins[0][0])):
+            # loop through the active plugins, add them to the new chian UNLESS
+            # the plugin is convolution, in which case add a new object
             if i == index:
                 newChain.append(
                     Convolution(path, mix=self.pluginParams[Convolution]['mix'])
@@ -230,10 +242,13 @@ class AudioHandler:
         self.updateChain(newChain)
     
     def specialFilterTypeChanger(self, type):
+        # get the filter type as an object:
         type = self.filterTypeStringToObj(type)
+        # if it's active, update the active one:
         if LadderFilter in self.chainTypes:
             index = self.chainTypes.index(LadderFilter)
             self.stream.plugins[0][0][index].mode = type
+        # update the pluginParams dictionary with the right mode:
         self.pluginParams[LadderFilter]['mode'] = type
 
     def changePluginParam(self, plugin, paramName, value):
@@ -270,21 +285,12 @@ class AudioHandler:
             self.updateChain(chainAsList)
 
     def getConvolutionName(self):
+        # returns the category > name of the current convolution file
         path = self.pluginParams[Convolution]['impulse_response_filename']
         directoryTree = path.split('/')
         pathRepr =  directoryTree[-2] + ' > ' + directoryTree[-1]
         return pathRepr
     
-    def filterTypeStringToObj(self, str):
-        dict = {
-            'LadderFilter.HPF12':LadderFilter.HPF12,
-            'LadderFilter.HPF24':LadderFilter.HPF24,
-            'LadderFilter.LPF12':LadderFilter.LPF12,
-            'LadderFilter.LPF24':LadderFilter.LPF24,
-            'LadderFilter.BPF12':LadderFilter.BPF12,
-            'LadderFilter.BPF24':LadderFilter.BPF24
-        }
-        return dict[str]
     
     def setFilterType(self, slope, band):
         # band = 'HPF', 'LPF' or 'BPF'
@@ -318,12 +324,14 @@ class AudioHandler:
         self.stream.__enter__()
     
     def isPluginActive(self, plugin):
+        # check if a certain plugin is currently active:
         self.updateChainTypes()
+        # checks for type against type, not object against object.
         plugin = self.pluginStrToType(plugin)
         return plugin in self.chainTypes
 
     def killStream(self):
         # first, store the current plugins:
-        print(self.stream.plugins)
         self.previousStreamPlugins = self.stream.plugins
+        # then exit the stream:
         self.stream.__exit__(0, 0, 0)

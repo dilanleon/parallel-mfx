@@ -16,5 +16,5 @@ Displays a toggleable list of effects, dry/wet mutes, and effect parameters that
 
 TO DO in (more or less) order:
 - Better commenting
-- Compressor Makeup Gain
+- Save/Load presets
 - LFOs capable of targeting any knob

@@ -118,10 +118,13 @@ class Knob:
         # reset the position of the knob to default
         self.val = self.defaultVal
         self.valPercent = self.inversePercentTransform()
-        # !!! valPercent is % of 1k for better precision !!!
+        # !!! valPercent is out of 1k for better precision !!!
     
     def createCurveFunction(self, type):
+        # WHY WAS THIS SO DIFFICULT
         # needed for aliasing reasons
+        # creates a pair of functions that transform from % of 1000 to 
+        # the value and vice versa according to the curve
         if type == 'linear':
             def percentTransform():
                 # % in, value out
@@ -170,9 +173,10 @@ class Knob:
                 # do the inverse of the above scaling:
                 return (scaledPercent*1000**3)**(1/3)
         else:
-            # we are all dumbasses who mispell things, so crash and tell me why
+            # we are all dumbasses who mispel things, so crash and tell me why
             raise Exception("ArgError: curveFunction must be 'linear'" +
                             " or 'logarithmic' or 'exponential'")
+        # there will only be two of these at the end of this function:
         return percentTransform, inversePercentTransform
     
     def getPointOnEdge(self, x, y, r):
@@ -184,6 +188,7 @@ class Knob:
     def draw(self, app):
         x, y, r = self.getScaledXYRad(app)
         sizeConstant = app.windowSize/app.baseWindowSize
+        # set border color based on if hovered:
         if self.hovered or self.mouseHold:
             borderColor = self.hoverColor
         else:
@@ -200,24 +205,26 @@ class Knob:
             scaledW = r*1.7 # arbitrary/aesthetic
             scaledH = r*0.9 # arbitrary/aesthetic
             distanceY = r*1.5 # arbitrary/aesthetic
+            # rectangle for the value to be drawn in:
             drawRect(x, y - distanceY, scaledW, scaledH, fill=self.color, 
                      align='center', border=self.accentColor, 
                      borderWidth=self.borderWidth)
+            # change display based on the value:
             if self.percentKnob:
                 # if it's a percent knob, display the integer percent and %
                 displayVal = str(int(self.val*100)) + '%'
             elif abs(self.val) < 1:
-                # else, if it's below 1, display 2 decimals
-                displayVal = format(self.val, '.2f')
+                # else, if it's below 1, display 3 decimals
+                displayVal = format(self.val, '.3f')
             elif abs(self.val) < 10 or 0 < self.val < 100:
-                # else, display decimals where possible (3 chars max)
-                displayVal = format(self.val, '.1f')
+                # else, display decimals where possible (4 chars max)
+                displayVal = format(self.val, '.2f')
             elif abs(self.val) < 1000:
-                # else, int is fine for numbers less than 1k
-                displayVal = int(self.val)
+                # else, int 1 decimal for numbers < 1000
+                displayVal = format(self.val, '.1f')
             else:
                 # else, display (thousands).(hundreds)k
-                megaVal = format(self.val/1000, '.1f')
+                megaVal = format(self.val/1000, '.2f')
                 displayVal = f'{megaVal}k'
             # r*0.5 is also arbitrary
             drawLabel(displayVal, x, y - distanceY, size=r*0.5, font='arial',
@@ -265,9 +272,9 @@ class Knob:
             self.hovered = False
     
     def mouseRelease(self):
+        # resets stuff
         self.mouseHold = False
         self.hovered = False
-
     
     def stepTimer(self, app):
         # count for 200ms after being clicked for double click check
