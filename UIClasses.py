@@ -86,7 +86,7 @@ class Button:
     
 # ########################    Knob Class    #############################
 class Knob:
-    # THE HARDEST FUCKING PART OF THIS PROJECT
+
     def __init__(self, cx, cy, radius, min, max, defaultVal, function,
                  curveFunction='linear', color='white', accentColor='black', 
                  borderWidth=1, alwaysShowVal=False, label=None, 
@@ -121,7 +121,6 @@ class Knob:
         # !!! valPercent is out of 1k for better precision !!!
     
     def createCurveFunction(self, type):
-        # WHY WAS THIS SO DIFFICULT
         # needed for aliasing reasons
         # creates a pair of functions that transform from % of 1000 to 
         # the value and vice versa according to the curve
@@ -229,6 +228,7 @@ class Knob:
             # r*0.5 is also arbitrary
             drawLabel(displayVal, x, y - distanceY, size=r*0.5, font='arial',
                       fill=self.labelColor)
+        # if there's a label, draw it: (r coefficient is arbitrary)
         if self.label != None:
             drawLabel(self.label, x, y + r*1.30, 
                       size=self.fontSize*sizeConstant, fill=self.labelColor)
@@ -239,6 +239,7 @@ class Knob:
         return ((x - mX)**2 + (y - mY)**2)**0.5 < r
 
     def checkIfPressed(self, mX, mY, app):
+        # checks if the button has been pressed (onMousePress)
         if self.mouseInKnob(mX, mY, app):
             self.mouseHold = True
             self.lastY = mY
@@ -272,7 +273,7 @@ class Knob:
             self.hovered = False
     
     def mouseRelease(self):
-        # resets stuff
+        # resets stuff on mouse release to stop knob interaction
         self.mouseHold = False
         self.hovered = False
     

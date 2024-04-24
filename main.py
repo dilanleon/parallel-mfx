@@ -3,7 +3,7 @@ from cmu_graphics import *
 from makeControls import *
 from pedalboard.io import AudioStream
 
-# Parallel Multi-Effects Processing
+# Realtime Parallel Multi-Effects Processing using Pedalboard
 # MFX-112 (Multi Effects Processor for 15-112)
 # Written by Dilan Juan Leon for CMU 15-112 project2
 
@@ -17,7 +17,7 @@ Standout features:
  - Mouse hover effects for buttons/knobs
  - Automatic scaling for control objects - makes UI design easier
  - User selectable I/O, buffer size, and sample rate
- - Idiot check screen if input and output are macbook pro builtins (idiot is me)
+ - Idiot check screen if input and output are mic/speakers
  - Supports virtual audio devices, so can be passed through a DAW
 
 
@@ -29,11 +29,15 @@ https://spotify.github.io/pedalboard/index.html
 Ambiances by EchoThief:
 http://www.echothief.com/
 
-# https://stackoverflow.com/questions/9390126/pythonic-way-to-check-if-something-exists
+Additionally consulted:
 
-# https://stackoverflow.com/questions/13479163/round-float-to-x-decimals
+https://stackoverflow.com/questions/9390126/pythonic-way-to-check-if-something-exists
 
-# https://builtin.com/data-science/python-list-files-in-directory
+https://stackoverflow.com/questions/13479163/round-float-to-x-decimals
+
+https://builtin.com/data-science/python-list-files-in-directory
+
+https://www.geeksforgeeks.org/execute-string-code-python/
 '''
 
 
@@ -104,6 +108,7 @@ def sampleRateBufferSize_onMousePress(app, mX, mY):
 # here lie the remains of the stuff now in makeControls.py
 
 def inputsScreen_onScreenActivate(app):
+    # reset:
     app.IOButtons = [ ]
     app.inputDevice = None
     app.outputDevice = None
@@ -128,9 +133,14 @@ def inputsScreen_redrawAll(app):
         for button in app.IOButtons: button.draw(app)
 
 def inputsScreen_onMouseMove(app, mX, mY):
+    # check if the button is hovered:
     for button in app.IOButtons:
-        # check if the button is hovered:
         button.mouseMove(mX, mY, app)
+
+def inputsScreen_checkForFeedback(app):
+    # checks if 'microphone' and 'speakers' are in the input/output:
+    return ('microphone' in app.inputDevice.lower() and 
+            'speakers' in app.outputDevice.lower())
 
 def inputsScreen_onMousePress(app, mX, mY):
     # check if a button has been pressed:
@@ -139,8 +149,7 @@ def inputsScreen_onMousePress(app, mX, mY):
     # check if the I/O has been set:
     if app.inputDevice != None and app.outputDevice != None:
         # if it's going to feedback, check with the user:
-        if (app.inputDevice == 'MacBook Pro Microphone' and
-            app.outputDevice == 'MacBook Pro Speakers'):
+        if inputsScreen_checkForFeedback(app):
             setActiveScreen('idiotCheckScreen')
             return
         # otherwise, go ahead to the main app:
@@ -150,7 +159,7 @@ def inputsScreen_onMousePress(app, mX, mY):
 ######################### IDIOT CHECK SCREEN ###########################
 # because I made this mistake too many times
 def idiotCheckScreen_onScreenActivate(app):
-    makeIdiotCheckButtons(app)  # makeControls.py - just two buttons
+    makeIdiotCheckButtons(app)  # makeControls.py
 
 def idiotCheckScreen_redrawAll(app):
     # background:

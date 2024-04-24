@@ -19,7 +19,7 @@ class AudioHandler:
         self.stream.__enter__()     # runs an asynch C++ process (no Threads!)
         self.dryGain, self.wetGain = 0.0, 0.0       # not stored in pluginParams
         self.dryMute, self.wetMute = False, False   # not stored in pluginParams
-        # The below dictionary will be called for plugin constructors as kwargs
+        # The dictionary called for plugin constructors as **kwargs:
         self.pluginParams = { 
             LadderFilter:{
                 'mode':LadderFilter.BPF12,
@@ -81,6 +81,7 @@ class AudioHandler:
                             Delay, Reverb, Convolution, Gain)
 
     def changeDryGain(self, newGain, unmute=False):
+        # unmute triggered by toggleDryMute()
         # Gain is always last
         # if trying to change param while muted, don't actually change it:
         if self.dryMute and not unmute:
@@ -93,9 +94,9 @@ class AudioHandler:
         else:
             self.stream.plugins[0][-1].gain_db = float(newGain)
             self.dryGain = newGain
-            # we need to re-make the plugin on each param change
     
     def changeWetGain(self, newGain, unmute=False):
+        # unmute triggered by togleWetMute()
         # Gain is always last within the wet chain
         # Same idea as self.changeDryGain()
         if self.wetMute and not unmute:
@@ -112,17 +113,17 @@ class AudioHandler:
         if self.dryMute: # if it is muted, set it to previous gain:
             self.changeDryGain(self.prevDryGain, unmute=True)
         else:
-            self.prevDryGain = self.dryGain     # don't forget what it was!
+            self.prevDryGain = self.dryGain # don't forget what it was
             self.changeDryGain(-999)
             # even -60 dB is basically inaudible, this is easier than true mute
-        self.dryMute = not self.dryMute # toggle mute property!
+        self.dryMute = not self.dryMute # toggle mute property
     
     def toggleWetMute(self):
         # same general idea as the above, with dry swapped for wet
         if self.wetMute:
             self.changeWetGain(self.prevWetGain, unmute=True)
         else:
-            self.prevWetGain = self.wetGain     # rerember the value!
+            self.prevWetGain = self.wetGain
             self.changeWetGain(-999)
             # you will not be able to hear this, I promise
         self.wetMute = not self.wetMute
@@ -136,7 +137,7 @@ class AudioHandler:
     
     def pluginStrToType(self, pluginStr):
         # convert a string to a type (useful when interfacing with files where
-        #                             pedalboard has not been imported)
+        #                             pedalboard objects have not been imported)
         typeDict = {
             'Filter':LadderFilter,
             'Invert':Invert,
@@ -165,6 +166,7 @@ class AudioHandler:
         return dict[str]
     
     def updateChain(self, newChain):
+        # takes a chain of plugins as a list (self.stream.plugins is a Chain)
         # Update the entirety of self.stream.plugins (the only way that worked)
         self.stream.plugins = Pedalboard([
             Mix([Chain(newChain), Gain(self.dryGain)])])

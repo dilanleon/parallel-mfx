@@ -117,7 +117,7 @@ def makeIOSetterFunction(i, direction):
     if direction == 'input':
         def f(app):
             app.inputDevice = AudioStream.input_device_names[i]
-            app.IOButtons = [ ]
+            app.IOButtons = [ ] # reset IOButtons and make output buttons
             makeIOButtons(app, AudioStream.output_device_names, 'output')
     elif direction == 'output':
         def f(app):
@@ -128,11 +128,13 @@ def makeIOSetterFunction(i, direction):
 #                        idiot check screen    
 def makeIdiotCheckYesNoFunction(yesNo):
     if yesNo == 'yes':
+        # make the feeding back audio stream anyway and switch to mainScreen
         def yes(app):
             makeAudioStream(app)
             setActiveScreen('mainScreen')
         return yes
     if yesNo == 'no':
+        # go back to inputsScreen
         def no(app):
             setActiveScreen('inputsScreen')
         return no
@@ -148,6 +150,8 @@ def makeIdiotCheckButtons(app):
 #                           IR select screen
 # https://builtin.com/data-science/python-list-files-in-directory
 def makeIRButtonFunctions(filename):
+    # makes the function that selects the IR, changes the convolution, and
+    # goes back to mainScreen
     def fileButtonFunction(app):
         app.IRpath += '/' + filename
         app.audio.changePluginParam('Convolution', 'impulse_response_filename',
@@ -156,9 +160,11 @@ def makeIRButtonFunctions(filename):
     return fileButtonFunction
 
 def makeIRButtons(app, folder):
+    # make the buttons that select an actual IR
     app.IRButtons = [ ]
     app.files = os.listdir('EchoThiefImpulseResponseLibrary/' + folder)
     i = 0
+    # while loop because of hidden files (e.g. .DS_Store)
     while i < len(app.files):
         if app.files[i][0] != '.':        # hide hidden files
             app.IRButtons.append(
@@ -171,24 +177,28 @@ def makeIRButtons(app, folder):
             app.files.pop(i)
 
 def makeFolderButtonFunctions(folderName):
+    # make the function that sets the IR path to the correct folder
+    # and makes IR buttons for that folder
     def folderButtonFunction(app):
         app.IRpath = 'EchoThiefImpulseResponseLibrary/' + folderName
         makeIRButtons(app, folderName)
     return folderButtonFunction
 
 def makeFolderButtons(app):
+    # make the buttons to select a folder
     app.IRFolderButtons = [ ]
     app.folders = os.listdir('EchoThiefImpulseResponseLibrary')
+    # use a while loop so hidden files don't mess up spacing:
     i = 0
     while i < len(app.folders):
-        if app.folders[i][0] != '.':        # hidden files should stay hidden!
+        if app.folders[i][0] != '.':        # hidden files should stay hidden
             app.IRFolderButtons.append(
                 Button(app.folders[i] + ' >', 105, 60 + i*33.3, 100, 31.25,
                        makeFolderButtonFunctions(app.folders[i]), font='arial',
                        hoverBorderColor=HOV_COLOR)
             )
             i += 1
-        else:
+        else: # if it starts with '.', get rid of it and don't change i
             app.folders.pop(i)
         
 #                  -----------------------------------
@@ -197,7 +207,10 @@ def makeFolderButtons(app):
 def makeControlFunction(type):
     # Functions used by knobs and buttons throughout the  main app
     # one big ass function to group a bunch of stuff together really
-    #                        *buttons*
+    # not gonna be a lot of functions in here (if you want to know what's going
+    # on you'll have to look in AudioHandler anyway... )
+    # Yes I know it's really stupid. There's kind of no good way to do it.
+    #                    ----* buttons *----
     def switchToSampleBufferScreen(app):
         app.audio.killStream()
         setActiveScreen('sampleRateBufferSize')
@@ -244,7 +257,7 @@ def makeControlFunction(type):
         app.audio.toggleDryMute()
     def muteWet(app):
         app.audio.toggleWetMute()
-    #                             *knobs*
+    #                       ----* knobs *----
     def changeFilterFrequency(app, newFrequency):
         app.audio.changePluginParam('Filter', 'cutoff_hz', newFrequency)
     def changeFilterResonance(app, newResonance):
@@ -299,7 +312,8 @@ def makeControlFunction(type):
         app.audio.changePluginParam('Reverb', 'dry_level', newDry)
     def changeReverbWidth(app, newWidth):
         app.audio.changePluginParam('Reverb', 'width', newWidth)
-    # @TODO Figure out what Reverb 'freeze mode' does and why it's a float
+    def changeReverbFreeze(app, newFreeze):
+        app.audio.changePluginParam('Reverb', 'freeze_mode', newFreeze)
     def changeConvolutionMix(app, newMix):
         app.audio.changePluginParam('Convolution', 'mix', newMix)
     def gainWet(app, newGain):
@@ -350,6 +364,7 @@ def makeControlFunction(type):
         'reverbDamping':changeReverbDamping,            # dictionary
         'reverbDryWet':changeReverbDryWet,
         'reverbWidth':changeReverbWidth,
+        'reverbFreeze':changeReverbFreeze,
         'convolution':convolutionToggle,
         'convolutionSelect':convolutionFileSelect,
         'convolutionMix':changeConvolutionMix,
@@ -361,9 +376,9 @@ def makeControlFunction(type):
         }
     return functionDict[type]
 
-# you made it to the end! there's another one :-)
+# you made it to the end! there's another long boi :-)
 def makeControlObjects(app):
-    # knobs and buttons separate for your (my) calling convenience!
+    # knobs and buttons separated for your (my) calling convenience!
     # creates all the control objects required by the app.
     # lots of magic numbers - they are arbitrary and determine UI layout.
     app.activeKnobs = [
@@ -453,6 +468,10 @@ def makeControlObjects(app):
         # reverb width
         Knob(337.5, 232.5, 17, 0, 1, 0.5, makeControlFunction('reverbWidth'),
              curveFunction='linear', label='width', color=app.reverbColor,
+             percentKnob=True),
+        # reverb freeze 
+        Knob(350, 272.5, 10, 0, 1, 0, makeControlFunction('reverbFreeze'),
+             curveFunction='linear', label='freeze', color=app.reverbColor,
              percentKnob=True),
         # convolution mix
         Knob(281.25, 350, 25, 0, 1, 0.5, makeControlFunction('convolutionMix'),
