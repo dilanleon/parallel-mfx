@@ -8,6 +8,9 @@ from pedalboard.io import AudioStream
 # Written by Dilan Juan Leon for CMU 15-112 project2
 
 '''
+Demo:
+https://drive.google.com/file/d/10st9Y4bGbAOxirjMzGcJ5oTlHPDcZTD5/view?usp=sharing
+
 Standout features:
  - Realtime audio processing
     - HPF, LPF, BPF, all with 12 or 24 db/octave slopes and inverse polarity
