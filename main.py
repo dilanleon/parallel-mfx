@@ -10,6 +10,10 @@ from pedalboard.io import AudioStream
 '''
 Standout features:
  - Realtime audio processing
+    - HPF, LPF, BPF, all with 12 or 24 db/octave slopes and inverse polarity
+    - Noise Gate, Compressor, Clipping, Distortion, Bitcrush, Chorus, Delay,
+      Reverb, Convolution Reverb with a free library of IRs
+    - Dry channel and wet channel, both with mute buttons
  - All UI scales to window height, supporting windows of arbitrary height
  - Snaps to 3:4 window scaling based on height
  - Impulse response selection reads files in /EchoThiefImpulseResponseLibrary/
